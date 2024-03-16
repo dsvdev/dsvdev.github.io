@@ -5,7 +5,7 @@ function onButtonPush() {
     } else if (button.textContent == "No more") {
         button.textContent = "Stop please"
     } else if (button.textContent == "Stop please") {
-        button.textContent = "dead button"
+        button.textContent = "х_х"
         button.classList = "btn btn-secondary"
         button.disabled = true
     } else {
