@@ -9,14 +9,67 @@
 </head>
 
 <body>
-    <div id="main" class="container-fluid p-5">
+    <div id="header_block" class="container-fluid px-5 py-1">
         <h3 class="display-3">Dmitrii Sviridov</h3>
-        <p class="lead">Sofrware development engineer</p>
-        <p>//todo</p>
-        <button id="strangeButton" type="button" onclick="onButtonPush()" class="btn btn-primary" >push me</button>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-        <script src="js/init.js"></script>
+        <p class="lead">Software development engineer</p>
     </div>
+    <div id="nav-block" class="container-fluid px-5 py-1">
+        <ul class="nav nav-tabs" id="nav-tabs">
+            <li class="nav-item" id="nav-exp">
+              <a class="nav-link active" aria-current="page" href="#">Expirience</a>
+            </li>
+            <li class="nav-game">
+              <a class="nav-link" href="#">Game</a>
+            </li>
+          </ul>
+    </div>
+    <div id="content-block" class="container-fluid px-5 py-1">
+        <nav id="navbar-exp" class="navbar bg-body-tertiary px-3 mb-3">
+            <a class="navbar-brand" href="#">Companies:</a>
+            <ul class="nav nav-pills">
+              <li class="nav-item">
+                <a class="nav-link" href="#scrollspyHeading1">Yandex</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#scrollspyHeading2">Tinkoff</a>
+              </li>
+            </ul>
+          </nav>
+          <div data-bs-spy="scroll" data-bs-target="#navbar-example2" data-bs-root-margin="0px 0px -40%" data-bs-smooth-scroll="true" class="scrollspy-example bg-body-tertiary p-3 rounded-2" tabindex="0">
+            <a class="btn btn-primary" data-bs-toggle="collapse" href="#yandexCollapse" role="button" aria-expanded="false" aria-controls="yandexCollapse">Yandex Market</a>
+            <p>February 2023 - October 2023</p>
+            <div class="collapse" id="yandexCollapse">
+                <div class="card card-body">
+                    <h5 class="display-6">Backend developer</h5>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+                        do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+                        nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+                        reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    </p>
+                </div>
+            </div>
+            <a class="btn btn-primary mt-3" data-bs-toggle="collapse" href="#tinkoffCollapse" role="button" aria-expanded="false" aria-controls="tinkoffCollapse">Tinkoff</a>
+            <p>November 2023 - Now</p>
+            <div class="collapse" id="tinkoffCollapse">
+                <div class="card card-body">
+                    <h5 class="display-6">Backend developer</h5>
+                    <p>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
+                        do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris
+                        nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
+                        reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    </p>
+                </div>
+            </div>
+          </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="js/init.js"></script>
 </body>
 
 </html>
