@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Портфолио Разработчика</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header с логотипом и ссылками -->
+    <header class="bg-white shadow-md p-5 mb-8 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <img src="logo.png" alt="Логотип" class="rounded-full object-cover w-10 h-10">
+            <div class="text-2xl font-bold">Ghost developer</div>
+        </div>
+        <div class="flex space-x-4">
+            <a href="https://github.com/dsvdev" target="_blank" class="text-gray-600 hover:text-black">
+                <i class="fab fa-github fa-2x"></i>
+            </a>
+            <a href="https://t.me/dsvdev" target="_blank" class="text-blue-500 hover:text-blue-700">
+                <i class="fab fa-telegram fa-2x"></i>
+            </a>
+            <a href="https://www.youtube.com/@dsvdev" target="_blank" class="text-red-600 hover:text-red-800">
+                <i class="fab fa-youtube fa-2x"></i>
+            </a>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-5 space-y-8">
+
+        <!-- Раздел Обо мне -->
+        <div class="bg-white shadow-md rounded-lg p-8 flex items-center space-x-8">
+            <img src="IMG_0132.png" alt="Моя фотография" class="rounded-lg object-cover w-48 h-48">
+            <div>
+                <h2 class="text-3xl font-bold mb-4">Обо мне</h2>
+                <p>Я разработчик с опытом в создании веб-приложений и сервисов. Моя страсть — это писать чистый и эффективный код, а также изучать современные технологии. В этом портфолио вы найдете мои проекты, гайды и ссылки на мои социальные сети.</p>
+            </div>
+        </div>
+
+        <!-- Раздел с соцсетями -->
+        <div class="bg-white shadow-md rounded-lg p-8">
+            <h2 class="text-3xl font-bold mb-4">Мои соцсети</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="border p-4 rounded-lg flex items-center space-x-4">
+                    <img src="https://i.pinimg.com/originals/19/7b/36/197b365922d1ea3aa1a932ff9bbda4a6.png" alt="YouTube" class="w-12 h-12 object-cover">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2">YouTube</h3>
+                        <p class="mb-2">Мой канал с гайдами и обучающими видео по разработке.</p>
+                        <a href="https://www.youtube.com/@dsvdev" target="_blank" class="text-red-500 hover:text-red-700">Перейти на YouTube</a>
+                    </div>
+                </div>
+                <div class="border p-4 rounded-lg flex items-center space-x-4">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram" class="w-12 h-12 object-cover">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2">Telegram</h3>
+                        <p class="mb-2">Мой телеграм-канал с новостями и обновлениями.</p>
+                        <a href="https://t.me/dsvdev" target="_blank" class="text-blue-500 hover:text-blue-700">Перейти в Telegram</a>
+                    </div>
+                </div>
+                <div class="border p-4 rounded-lg flex items-center space-x-4">
+                    <img src="https://s0.rbk.ru/v6_top_pics/media/img/6/16/346925776976166.jpeg" alt="Boosty" class="w-12 h-12 object-cover">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2">Boosty</h3>
+                        <p class="mb-2">Мой Boosty с дополнительными материалами и поддержкой.</p>
+                        <a href="https://boosty.to/dsvdev" target="_blank" class="text-yellow-500 hover:text-yellow-700">Перейти на Boosty</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Раздел с проектами -->
+        <div class="bg-white shadow-md rounded-lg p-8">
+            <h2 class="text-3xl font-bold mb-4">Мои проекты</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="border p-4 rounded-lg flex items-center space-x-4">
+                    <img src="telego2.png" alt="Лого проекта" class="w-12 h-12 object-cover">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-2">Telego</h3>
+                        <p class="mb-2">Библиотека для создания телеграм ботов на go.</p>
+                        <a href="https://github.com/dsvdev/telego" target="_blank" class="text-blue-500 hover:text-blue-700">Посмотреть на GitHub</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Раздел с гайдами -->
+        <div class="bg-white shadow-md rounded-lg p-8">
+            <h2 class="text-3xl font-bold mb-4">Мои гайды</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                <div class="relative group overflow-hidden rounded-lg">
+                    <iframe width="100%" height="300" src="https://www.youtube.com/embed/ewXRVUmxCCY" frameborder="0" allowfullscreen></iframe>
+                    <div class="absolute bottom-0 left-0 w-full bg-gray-900 bg-opacity-75 text-white p-2 text-lg">Как пройти испытательный срок</div>
+                </div>
+                <div class="relative group overflow-hidden rounded-lg">
+                    <iframe width="100%" height="300" src="https://www.youtube.com/embed/6LSf68bQy_I" frameborder="0" allowfullscreen></iframe>
+                    <div class="absolute bottom-0 left-0 w-full bg-gray-900 bg-opacity-75 text-white p-2 text-lg">Топ-10 вопросов на Java-собесе</div>
+                </div>
+                <div class="relative group overflow-hidden rounded-lg">
+                    <iframe width="100%" height="300" src="https://www.youtube.com/embed/KpB4iIX5cGw" frameborder="0" allowfullscreen></iframe>
+                    <div class="absolute bottom-0 left-0 w-full bg-gray-900 bg-opacity-75 text-white p-2 text-lg">Лайвкодинг с реального собеса</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
