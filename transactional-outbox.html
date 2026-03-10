@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transactional Outbox — ghost_dev</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2230;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #69ff74;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+
+  .nav-logo span { color: var(--muted); }
+
+  .nav-sep { color: var(--border); font-size: 1.2rem; }
+
+  .nav-current {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  .page-tag {
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--text);
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+
+  h1 .hl { color: var(--accent); }
+
+  .lead {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 40px;
+    max-width: 600px;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── EXPLANATION BLOCK ── */
+  .explain {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+    font-size: 0.78rem;
+    line-height: 1.85;
+    color: var(--text);
+  }
+
+  .explain p { margin-bottom: 14px; }
+  .explain p:last-child { margin-bottom: 0; }
+  .explain .hl  { color: var(--accent); }
+  .explain .err { color: var(--accent2); }
+  .explain .ok  { color: var(--accent3); }
+
+  .code-inline {
+    background: rgba(0,229,255,0.07);
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  /* ── STEPS ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.7rem;
+    color: var(--accent);
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 6px;
+    padding: 3px 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    margin-top: 1px;
+  }
+
+  .step-text {
+    font-size: 0.74rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .step-text .dim { color: var(--muted); }
+
+  /* ── VIDEO ── */
+  .video-wrap {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    border: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+
+  .video-wrap iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16/9;
+    border: none;
+  }
+
+  .video-meta {
+    background: var(--surface);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .video-meta-icon { font-size: 1.2rem; }
+
+  .video-meta-info { flex: 1; }
+
+  .video-meta-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .video-meta-sub {
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
+
+  .video-meta-link {
+    font-size: 0.65rem;
+    color: var(--accent);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+
+  .video-meta-link:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">ghost<span>_</span>dev</a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">Transactional Outbox</span>
+</nav>
+
+<div class="content">
+  <div class="page-tag">// backend pattern</div>
+  <h1><span class="hl">Transactional Outbox</span></h1>
+  <p class="lead">
+    Паттерн для надёжной доставки событий в брокер сообщений — без риска потерять событие при падении сервиса.
+  </p>
+
+  <div class="section-title">проблема</div>
+  <div class="explain">
+    <p>
+      Классическая проблема: нужно сохранить данные в БД <em>и</em> отправить событие в Kafka/RabbitMQ.
+      Если делать это двумя отдельными операциями — <span class="err">нет атомарности</span>.
+      Сервис может упасть после записи в БД, но до публикации события. Событие потеряно навсегда.
+    </p>
+    <p>
+      <span class="hl">Transactional Outbox</span> решает это: событие записывается в таблицу
+      <code class="code-inline">outbox</code> в той же транзакции, что и основные данные.
+      Отдельный процесс (<em>relay</em>) читает unpublished записи и отправляет их в брокер.
+      <span class="ok">Атомарность гарантирована</span> — либо оба действия успешны, либо ни одно.
+    </p>
+  </div>
+
+  <div class="section-title">как это работает</div>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">01</span>
+      <div class="step-text">
+        Бизнес-операция и запись события в таблицу <code class="code-inline">outbox</code>
+        выполняются в <strong>одной транзакции</strong> БД.
+        <span class="dim">— Если транзакция откатилась, события тоже нет.</span>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <div class="step-text">
+        <em>Relay-процесс</em> (или CDC — Change Data Capture) читает новые записи из
+        <code class="code-inline">outbox</code> и публикует их в брокер.
+        <span class="dim">— Работает независимо от основного сервиса.</span>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <div class="step-text">
+        После успешной публикации запись помечается как <code class="code-inline">published</code>
+        или удаляется.
+        <span class="dim">— При сбое relay просто повторяет попытку (at-least-once delivery).</span>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">04</span>
+      <div class="step-text">
+        Потребители событий должны быть <strong>идемпотентны</strong> — при дублировании обрабатывать
+        событие корректно.
+        <span class="dim">— Именно здесь пригодится Idempotency Key.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">видео объяснение</div>
+  <div class="video-wrap">
+    <iframe
+      src="https://www.youtube.com/embed/knSw0m5MADg"
+      title="Transactional Outbox — ghost_dev"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen>
+    </iframe>
+    <div class="video-meta">
+      <div class="video-meta-icon">📬</div>
+      <div class="video-meta-info">
+        <div class="video-meta-title">Transactional Outbox — полное объяснение</div>
+        <div class="video-meta-sub">ghost_dev · YouTube</div>
+      </div>
+      <a href="https://youtu.be/knSw0m5MADg" target="_blank" class="video-meta-link">
+        <span>↗</span> Открыть на YouTube
+      </a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idempotency Key — ghost_dev</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2230;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #69ff74;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+
+  .nav-logo span { color: var(--muted); }
+
+  .nav-sep { color: var(--border); font-size: 1.2rem; }
+
+  .nav-current {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  .page-tag {
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--text);
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+
+  h1 .hl { color: var(--accent); }
+
+  .lead {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 40px;
+    max-width: 600px;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── EXPLANATION BLOCK ── */
+  .explain {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+    font-size: 0.78rem;
+    line-height: 1.85;
+    color: var(--text);
+  }
+
+  .explain p { margin-bottom: 14px; }
+  .explain p:last-child { margin-bottom: 0; }
+  .explain .hl { color: var(--accent); }
+  .explain .err { color: var(--accent2); }
+  .explain .ok { color: var(--accent3); }
+
+  .code-inline {
+    background: rgba(0,229,255,0.07);
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  /* ── DEMO CARDS ── */
+  .demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 580px) {
+    .demo-grid { grid-template-columns: 1fr; }
+  }
+
+  .demo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+
+  .demo-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .demo-card.bad {
+    border-color: rgba(255,77,109,0.3);
+  }
+  .demo-card.bad:hover {
+    border-color: var(--accent2);
+    box-shadow: 0 0 24px rgba(255,77,109,0.1);
+  }
+
+  .demo-card.good {
+    border-color: rgba(0,229,255,0.3);
+  }
+  .demo-card.good:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 24px rgba(0,229,255,0.1);
+  }
+
+  .demo-card-icon { font-size: 1.5rem; }
+
+  .demo-card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .demo-card.bad  .demo-card-title { color: var(--accent2); }
+  .demo-card.good .demo-card-title { color: var(--accent); }
+
+  .demo-card-desc {
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.65;
+    flex: 1;
+  }
+
+  .demo-card-cta {
+    font-size: 0.68rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .demo-card.bad  .demo-card-cta { color: var(--accent2); }
+  .demo-card.good .demo-card-cta { color: var(--accent); }
+
+  /* ── VIDEO PLACEHOLDER ── */
+  .video-placeholder {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .video-thumb {
+    aspect-ratio: 16/9;
+    background: #0d0f14;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .video-thumb::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 20px,
+      rgba(255,255,255,0.01) 20px,
+      rgba(255,255,255,0.01) 40px
+    );
+  }
+
+  .video-play-icon {
+    font-size: 3rem;
+    opacity: 0.25;
+  }
+
+  .video-coming-soon {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .video-coming-soon .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  .video-meta {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .video-meta-icon { font-size: 1.2rem; }
+
+  .video-meta-info {
+    flex: 1;
+  }
+
+  .video-meta-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .video-meta-sub {
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
+
+  .video-meta-badge {
+    font-size: 0.6rem;
+    background: rgba(255,215,64,0.08);
+    border: 1px solid rgba(255,215,64,0.2);
+    border-radius: 20px;
+    padding: 3px 9px;
+    color: #ffd740;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">ghost<span>_</span>dev</a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">Idempotency Key</span>
+</nav>
+
+<div class="content">
+  <div class="page-tag">// backend pattern</div>
+  <h1><span class="hl">Idempotency Key</span></h1>
+  <p class="lead">
+    Как защитить платёжную систему от дублирования при сетевых сбоях и ретраях.
+  </p>
+
+  <div class="section-title">проблема</div>
+  <div class="explain">
+    <p>
+      При сетевом сбое клиент не знает — дошёл ли его запрос до сервера или нет. Если сделать ретрай без защиты,
+      сервер выполнит операцию повторно. В случае с платежом это <span class="err">двойное списание</span>.
+    </p>
+    <p>
+      Решение — <span class="hl">Idempotency Key</span>: уникальный токен, который клиент генерирует для каждой
+      <em>бизнес-операции</em> и передаёт в заголовке <code class="code-inline">Idempotency-Key</code>.
+      Сервер сохраняет результат под этим ключом. При повторном запросе с тем же ключом
+      — <span class="ok">возвращает кэшированный ответ</span>, не выполняя операцию заново.
+    </p>
+    <p>
+      Ключ должен быть достаточно случайным (UUID v4 или аналог) и привязан к конкретной операции, а не к сессии.
+    </p>
+  </div>
+
+  <div class="section-title">интерактивные демо</div>
+  <div class="demo-grid">
+    <a href="no-idempotency-animation.html" class="demo-card bad">
+      <div class="demo-card-icon">❌</div>
+      <div class="demo-card-title">Без идемпотентности</div>
+      <div class="demo-card-desc">
+        Пошаговая анимация: клиент делает ретрай без ключа, сервер выполняет операцию дважды — двойное списание.
+      </div>
+      <div class="demo-card-cta"><span>▶</span> Смотреть анимацию</div>
+    </a>
+
+    <a href="idempotency-animation.html" class="demo-card good">
+      <div class="demo-card-icon">✅</div>
+      <div class="demo-card-title">С Idempotency Key</div>
+      <div class="demo-card-desc">
+        Пошаговая анимация: клиент передаёт ключ, сервер кэширует результат и при ретрае возвращает его без повторной операции.
+      </div>
+      <div class="demo-card-cta"><span>▶</span> Смотреть анимацию</div>
+    </a>
+  </div>
+
+  <div class="section-title">видео объяснение</div>
+  <div class="video-placeholder">
+    <div class="video-thumb">
+      <div class="video-play-icon">▶</div>
+      <div class="video-coming-soon">
+        <span class="dot"></span>Скоро на YouTube
+      </div>
+    </div>
+    <div class="video-meta">
+      <div class="video-meta-icon">🎬</div>
+      <div class="video-meta-info">
+        <div class="video-meta-title">Idempotency Key — полное объяснение</div>
+        <div class="video-meta-sub">ghost_dev · YouTube</div>
+      </div>
+      <div class="video-meta-badge">скоро</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

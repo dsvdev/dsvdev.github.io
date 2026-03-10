@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ghost_dev</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #161a23;
+    --border: #1e2230;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #69ff74;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-img {
+    height: 40px;
+    width: auto;
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+
+  .logo-text span {
+    color: var(--muted);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 80px 40px 60px;
+  }
+
+  .hero-tag {
+    font-size: 0.65rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 .hl { color: var(--accent); }
+
+  .hero p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 560px;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+  }
+
+  .section-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── TOPIC CARDS ── */
+  .topics {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+
+  .topic-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .topic-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 28px rgba(0,229,255,0.08);
+    transform: translateY(-2px);
+  }
+
+  .topic-card:active {
+    transform: translateY(0);
+  }
+
+  .topic-card-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+  }
+
+  .topic-card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+  }
+
+  .topic-card-desc {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .topic-card-links {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .topic-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.68rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    transition: opacity 0.2s;
+  }
+
+  .topic-link:hover { opacity: 0.7; }
+
+  .topic-link.muted {
+    color: var(--muted);
+  }
+
+  .topic-link .badge {
+    font-size: 0.6rem;
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 20px;
+    padding: 1px 7px;
+    color: var(--accent);
+  }
+
+  .topic-link.muted .badge {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.1);
+    color: var(--muted);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .footer-brand span { color: var(--accent); }
+
+  .footer-note {
+    font-size: 0.65rem;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="logo.png" alt="ghost_dev logo" class="logo-img">
+  <div class="logo-text">ghost<span>_</span>dev</div>
+</header>
+
+<div class="hero">
+  <div class="hero-tag">// backend engineering</div>
+  <h1>Сложные концепции<br><span class="hl">простым языком</span></h1>
+  <p>Интерактивные визуализации, объяснения и примеры для backend-разработчиков. Разбираем паттерны надёжных систем.</p>
+</div>
+
+<div class="section">
+  <div class="section-label">демо материалы</div>
+
+  <div class="topics">
+
+    <div class="topic-card" onclick="window.location='idempotency-key.html'">
+      <div class="topic-card-icon">🔑</div>
+      <div class="topic-card-title">Idempotency Key</div>
+      <div class="topic-card-desc">
+        Почему повторные запросы опасны и как idempotency key защищает от двойных списаний при ретраях и сетевых сбоях.
+      </div>
+      <div class="topic-card-links">
+        <a href="idempotency-key.html" class="topic-link" onclick="event.stopPropagation()">
+          <span>→</span> Открыть страницу <span class="badge">demo</span>
+        </a>
+        <a href="no-idempotency-animation.html" class="topic-link" onclick="event.stopPropagation()">
+          <span>⚠</span> Без идемпотентности — анимация
+        </a>
+        <a href="idempotency-animation.html" class="topic-link" onclick="event.stopPropagation()">
+          <span>✓</span> С idempotency key — анимация
+        </a>
+        <a href="#" class="topic-link muted" onclick="event.stopPropagation(); event.preventDefault()">
+          <span>▶</span> Видео на YouTube <span class="badge">скоро</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="topic-card" onclick="window.location='transactional-outbox.html'">
+      <div class="topic-card-icon">📬</div>
+      <div class="topic-card-title">Transactional Outbox</div>
+      <div class="topic-card-desc">
+        Паттерн для надёжной доставки событий: как гарантировать, что сообщение в брокер будет отправлено атомарно с записью в БД.
+      </div>
+      <div class="topic-card-links">
+        <a href="transactional-outbox.html" class="topic-link" onclick="event.stopPropagation()">
+          <span>→</span> Открыть страницу <span class="badge">видео</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand"><span>ghost</span>_dev</div>
+  <div class="footer-note">// backend engineering &amp; distributed systems</div>
+</footer>
+
+</body>
+</html>
