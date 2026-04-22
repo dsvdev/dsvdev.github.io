@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Go Slices — ghost_dev</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2230;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #69ff74;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+
+  .nav-logo span { color: var(--muted); }
+
+  .nav-sep { color: var(--border); font-size: 1.2rem; }
+
+  .nav-current {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  .page-tag {
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--text);
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+
+  h1 .hl { color: var(--accent); }
+
+  .lead {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 40px;
+    max-width: 600px;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── EXPLANATION BLOCK ── */
+  .explain {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    font-size: 0.78rem;
+    line-height: 1.85;
+    color: var(--text);
+  }
+
+  .explain p { margin-bottom: 14px; }
+  .explain p:last-child { margin-bottom: 0; }
+  .explain .hl  { color: var(--accent); }
+  .explain .err { color: var(--accent2); }
+  .explain .ok  { color: var(--accent3); }
+
+  .code-inline {
+    background: rgba(0,229,255,0.07);
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: #0d0f14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    font-size: 0.74rem;
+    line-height: 1.75;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* Go syntax highlighting */
+  .kw  { color: var(--accent); }
+  .fn  { color: var(--accent3); }
+  .nm  { color: #cbd5e1; }
+  .tp  { color: #7dd3fc; }
+  .pk  { color: #c084fc; }
+  .st  { color: #f59e0b; }
+  .cm  { color: var(--muted); font-style: italic; }
+  .err { color: var(--accent2); }
+  .hl  { color: var(--accent); background: rgba(0,229,255,0.08); border-radius: 3px; padding: 0 2px; }
+
+  /* ── NOTE ── */
+  .note {
+    border-left: 3px solid var(--accent3);
+    background: rgba(105,255,116,0.04);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 0.74rem;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .note::before {
+    content: '✓ ';
+    color: var(--accent3);
+    font-weight: 700;
+  }
+
+  /* ── PITFALL ── */
+  .pitfall {
+    border-left: 3px solid var(--accent2);
+    background: rgba(255,77,109,0.04);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 0.74rem;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .pitfall::before {
+    content: '⚠ ';
+    color: var(--accent2);
+    font-weight: 700;
+  }
+
+  /* ── STEPS ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.7rem;
+    color: var(--accent);
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 6px;
+    padding: 3px 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    margin-top: 1px;
+  }
+
+  .step-text {
+    font-size: 0.74rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .step-text .dim { color: var(--muted); }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    overflow-x: auto;
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.73rem;
+  }
+
+  .table-wrap th {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    padding: 12px 16px;
+    text-align: left;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-wrap td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    line-height: 1.6;
+    vertical-align: top;
+  }
+
+  .table-wrap tr:last-child td { border-bottom: none; }
+  .table-wrap tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+  .table-wrap td:first-child { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .table-wrap td:nth-child(2) { color: var(--accent3); }
+  .table-wrap td:last-child { color: var(--muted); }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .footer-brand span { color: var(--accent); }
+
+  .footer-note {
+    font-size: 0.65rem;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">ghost<span>_</span>dev</a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">Go Slices</span>
+</nav>
+
+<div class="content">
+  <div class="page-tag">// go internals</div>
+  <h1>Go <span class="hl">Slices</span></h1>
+  <p class="lead">
+    Полное техническое руководство по слайсам в Go. Внутреннее устройство, опасные подводные камни shared backing array, правильный append и copy — всё что нужно знать чтобы не выстрелить себе в ногу.
+  </p>
+
+  <!-- 1. ВНУТРЕННЕЕ УСТРОЙСТВО -->
+  <div class="section-title">1. внутреннее устройство</div>
+
+  <div class="explain">
+    <p>
+      Слайс в Go — это <span class="hl">не массив</span>. Это <span class="hl">заголовок (slice header)</span> из трёх полей: указатель на backing array, длина и ёмкость. На 64-битной системе заголовок занимает ровно 24 байта.
+    </p>
+    <p>
+      <strong>Массив</strong> — фиксированный, тип-значение, хранится на стеке, размер известен на этапе компиляции. <strong>Слайс</strong> — динамический вид на часть массива. Заголовок передаётся по значению (копируется), но backing array — по указателю: оба слайса смотрят в одну и ту же память.
+    </p>
+    <p>
+      <code class="code-inline">len</code> — сколько элементов доступно прямо сейчас. <code class="code-inline">cap</code> — сколько памяти выделено начиная с <code class="code-inline">ptr</code>. Инвариант всегда: <code class="code-inline">0 ≤ len ≤ cap</code>.
+    </p>
+  </div>
+
+<div class="code-block"><span class="cm">// Внутреннее представление — упрощённо (пакет reflect)</span>
+<span class="kw">type</span> <span class="tp">SliceHeader</span> <span class="kw">struct</span> {
+    <span class="nm">Data</span> <span class="tp">uintptr</span>  <span class="cm">// указатель на первый элемент backing array</span>
+    <span class="nm">Len</span>  <span class="tp">int</span>       <span class="cm">// количество доступных элементов</span>
+    <span class="nm">Cap</span>  <span class="tp">int</span>       <span class="cm">// ёмкость от Data до конца backing array</span>
+}
+
+<span class="nm">arr</span> := [5]<span class="tp">int</span>{10, 20, 30, 40, 50}  <span class="cm">// массив — фиксированный, тип [5]int</span>
+<span class="nm">s</span>   := <span class="nm">arr</span>[1:4]                      <span class="cm">// слайс: ptr→arr[1], len=3, cap=4</span>
+
+<span class="pk">fmt</span>.<span class="fn">Println</span>(<span class="nm">s</span>)        <span class="cm">// [20 30 40]</span>
+<span class="pk">fmt</span>.<span class="fn">Println</span>(<span class="fn">len</span>(<span class="nm">s</span>))   <span class="cm">// 3</span>
+<span class="pk">fmt</span>.<span class="fn">Println</span>(<span class="fn">cap</span>(<span class="nm">s</span>))   <span class="cm">// 4  (до конца arr: позиции 1..4)</span></div>
+
+  <div class="explain">
+    <p>
+      Когда слайс передаётся в функцию, копируется только <span class="hl">заголовок</span> (24 байта). Backing array не копируется. Поэтому изменения через <code class="code-inline">s[i] = x</code> видны снаружи. Но если функция делает <code class="code-inline">s = append(s, ...)</code>, это меняет <em>локальную копию заголовка</em> — снаружи изменений нет. Именно поэтому append принято возвращать явно.
+    </p>
+  </div>
+
+  <!-- 2. MAKE VS ЛИТЕРАЛ -->
+  <div class="section-title">2. make vs литерал</div>
+
+  <div class="explain">
+    <p>
+      <span class="hl">Литерал</span> — когда элементы известны при инициализации или нужен пустой слайс не-nil. <span class="hl">make</span> — когда нужен контроль над <code class="code-inline">len</code> и <code class="code-inline">cap</code>, или слайс нужен как буфер для последующих append.
+    </p>
+    <p>
+      <code class="code-inline">var s []T</code> создаёт nil-слайс. <code class="code-inline">[]T{}</code> создаёт не-nil пустой слайс. Для большинства операций разницы нет, но для <span class="err">JSON-сериализации</span> — принципиально важно.
+    </p>
+  </div>
+
+<div class="code-block"><span class="cm">// ── Литерал: элементы известны заранее ──</span>
+<span class="nm">primes</span> := []<span class="tp">int</span>{2, 3, 5, 7, 11}               <span class="cm">// len=5, cap=5</span>
+<span class="nm">empty</span>  := []<span class="tp">string</span>{}                            <span class="cm">// len=0, cap=0, НЕ nil</span>
+
+<span class="cm">// ── nil-слайс: нулевое значение типа ──</span>
+<span class="kw">var</span> <span class="nm">ids</span> []<span class="tp">int64</span>                                  <span class="cm">// nil, len=0, cap=0, append работает</span>
+
+<span class="cm">// ── make: явный контроль len и cap ──</span>
+<span class="nm">buf</span>    := <span class="fn">make</span>([]<span class="tp">byte</span>, 0, 4096)                 <span class="cm">// буфер: len=0, cap=4096</span>
+<span class="nm">users</span>  := <span class="fn">make</span>([]<span class="tp">User</span>, 100)                      <span class="cm">// 100 нулевых User, len=cap=100</span>
+<span class="nm">matrix</span> := <span class="fn">make</span>([][]<span class="tp">float64</span>, <span class="nm">rows</span>)               <span class="cm">// внешний слайс, len=cap=rows</span></div>
+
+  <div class="note">
+    <code class="code-inline">make([]T, len)</code> и <code class="code-inline">make([]T, len, cap)</code> различаются: в первом cap=len. Если потом будешь делать append — используй <code class="code-inline">make([]T, 0, expectedSize)</code>, иначе первые len append будут писать за границу и расти сверх len.
+  </div>
+
+  <!-- 3. APPEND -->
+  <div class="section-title">3. append и рост capacity</div>
+
+  <div class="explain">
+    <p>
+      <code class="code-inline">append</code> добавляет элементы в конец слайса. Если <code class="code-inline">len &lt; cap</code> — элемент записывается на позицию <code class="code-inline">s[len]</code>, len увеличивается, <span class="ok">аллокации нет</span>. Если <code class="code-inline">len == cap</code> — runtime выделяет <span class="hl">новый backing array</span> большего размера, копирует старые данные, и возвращает новый слайс.
+    </p>
+    <p>
+      Алгоритм роста в Go 1.18+: для маленьких слайсов (~&lt;256 элементов) cap удваивается. Для больших — плавный рост по формуле <code class="code-inline">newCap ≈ oldCap + (oldCap + 3·256) / 4</code>. Точная формула может меняться между версиями — <span class="err">не полагайся на конкретные значения cap</span> в логике программы.
+    </p>
+  </div>
+
+<div class="code-block"><span class="nm">s</span> := []<span class="tp">int</span>{1, 2, 3}      <span class="cm">// len=3, cap=3</span>
+<span class="nm">s</span>  = <span class="fn">append</span>(<span class="nm">s</span>, 4)        <span class="cm">// cap=6 (удвоился), len=4 — новый backing array</span>
+<span class="nm">s</span>  = <span class="fn">append</span>(<span class="nm">s</span>, 5, 6)     <span class="cm">// len=6, cap=6 — без аллокации</span>
+<span class="nm">s</span>  = <span class="fn">append</span>(<span class="nm">s</span>, 7)        <span class="cm">// cap=12, len=7 — снова удвоился</span>
+
+<span class="cm">// Вариадик: добавить все элементы другого слайса</span>
+<span class="nm">a</span> := []<span class="tp">int</span>{1, 2}
+<span class="nm">b</span> := []<span class="tp">int</span>{3, 4, 5}
+<span class="nm">a</span>  = <span class="fn">append</span>(<span class="nm">a</span>, <span class="nm">b</span>...)     <span class="cm">// a = [1 2 3 4 5]</span>
+
+<span class="cm">// Почему append возвращает новый слайс — наглядно</span>
+<span class="kw">func</span> <span class="fn">bad</span>(<span class="nm">s</span> []<span class="tp">int</span>) {
+    <span class="nm">s</span> = <span class="fn">append</span>(<span class="nm">s</span>, 99)  <span class="cm">// меняет локальную копию заголовка</span>
+}                          <span class="cm">// вызывающий не видит изменений!</span>
+
+<span class="kw">func</span> <span class="fn">good</span>(<span class="nm">s</span> []<span class="tp">int</span>) []<span class="tp">int</span> {
+    <span class="kw">return</span> <span class="fn">append</span>(<span class="nm">s</span>, 99)  <span class="cm">// явно возвращаем новый слайс</span>
+}</div>
+
+  <div class="pitfall">
+    <code class="code-inline">append</code> всегда нужно присваивать: <code class="code-inline">s = append(s, v)</code>. Если пропустить присваивание, при росте backing array старая переменная указывает на устаревшие данные и имеет неверный len.
+  </div>
+
+  <!-- 4. SHARED BACKING ARRAY -->
+  <div class="section-title">4. shared backing array</div>
+
+  <div class="explain">
+    <p>
+      Когда создаёшь слайс из слайса (<code class="code-inline">sub := s[1:3]</code>), оба слайса <span class="err">разделяют один backing array</span>. Изменение элемента через <code class="code-inline">sub[0]</code> меняет <code class="code-inline">original[1]</code>. Это самый частый источник неожиданных мутаций в Go.
+    </p>
+    <p>
+      Особенно коварно с append: пока у sub есть свободный cap, append пишет в ту же память что и original. Только когда cap переполнен — backing array расходятся и изменения перестают пересекаться.
+    </p>
+  </div>
+
+<div class="code-block"><span class="nm">original</span> := []<span class="tp">int</span>{1, 2, 3, 4, 5}
+<span class="nm">sub</span>      := <span class="nm">original</span>[1:3]      <span class="cm">// len=2, cap=4, ptr→original[1]</span>
+
+<span class="nm">sub</span>[0] = 99                    <span class="cm">// ⚠ меняет original[1]!</span>
+<span class="pk">fmt</span>.<span class="fn">Println</span>(<span class="nm">original</span>)          <span class="cm">// [1 99 3 4 5]</span>
+
+<span class="cm">// append в sub пишет в память original, пока есть cap</span>
+<span class="nm">sub</span> = <span class="fn">append</span>(<span class="nm">sub</span>, 999)        <span class="cm">// len=3, cap=4 — пишет на original[3]!</span>
+<span class="pk">fmt</span>.<span class="fn">Println</span>(<span class="nm">original</span>)          <span class="cm">// [1 99 3 999 5]</span>
+
+<span class="cm">// Как только cap переполнен — независимы</span>
+<span class="nm">sub</span> = <span class="fn">append</span>(<span class="nm">sub</span>, 1, 2)      <span class="cm">// cap=4, нужно 5 → новый backing array</span>
+<span class="nm">sub</span>[0] = 0                     <span class="cm">// original теперь не затронут</span></div>
+
+  <div class="pitfall">
+    В конкурентных горутинах два слайса на одном backing array без синхронизации — гонка данных. <code class="code-inline">go test -race</code> поймает это только если гонка произошла в конкретном прогоне. Запускай тесты с <code class="code-inline">-race</code> в CI всегда.
+  </div>
+
+<div class="code-block"><span class="cm">// ── Защита 1: явная копия через copy ──</span>
+<span class="nm">safe</span> := <span class="fn">make</span>([]<span class="tp">int</span>, <span class="fn">len</span>(<span class="nm">sub</span>))
+<span class="fn">copy</span>(<span class="nm">safe</span>, <span class="nm">sub</span>)
+<span class="nm">safe</span>[0] = 0                    <span class="cm">// original не затронут</span>
+
+<span class="cm">// ── Защита 2: full slice expression [low:high:max] ──</span>
+<span class="cm">// Ограничивает cap, следующий append создаст новый backing array</span>
+<span class="nm">limited</span> := <span class="nm">original</span>[1:3:3]   <span class="cm">// len=2, cap=2 (а не 4!)</span>
+<span class="nm">limited</span>  = <span class="fn">append</span>(<span class="nm">limited</span>, 99)<span class="cm">// cap=2 → новый backing array, original цел</span>
+<span class="pk">fmt</span>.<span class="fn">Println</span>(<span class="nm">original</span>)          <span class="cm">// [1 99 3 999 5] — без изменений</span></div>
+
+  <div class="note">
+    <code class="code-inline">s[low:high:max]</code> — full slice expression. <code class="code-inline">max</code> задаёт верхнюю границу cap, должен быть ≤ cap исходного слайса. Результат: len = high−low, cap = max−low. Используй при передаче подслайсов в функции, которые могут их расширять через append.
+  </div>
+
+  <!-- 5. COPY -->
+  <div class="section-title">5. copy</div>
+
+  <div class="explain">
+    <p>
+      <code class="code-inline">copy(dst, src)</code> копирует <code class="code-inline">min(len(dst), len(src))</code> элементов и возвращает количество скопированных. Это единственный способ получить независимую копию данных слайса.
+    </p>
+    <p>
+      copy корректно работает для перекрывающихся срезов одного массива — стандартная библиотека гарантирует правильное направление копирования. Также copy принимает <code class="code-inline">[]byte</code> и <code class="code-inline">string</code> как источник.
+    </p>
+  </div>
+
+<div class="code-block"><span class="nm">src</span> := []<span class="tp">int</span>{1, 2, 3, 4, 5}
+
+<span class="cm">// Полная копия</span>
+<span class="nm">dst</span> := <span class="fn">make</span>([]<span class="tp">int</span>, <span class="fn">len</span>(<span class="nm">src</span>))
+<span class="fn">copy</span>(<span class="nm">dst</span>, <span class="nm">src</span>)                   <span class="cm">// dst = [1 2 3 4 5], независимый</span>
+
+<span class="cm">// Частичная: копируется min(len(dst), len(src))</span>
+<span class="nm">small</span> := <span class="fn">make</span>([]<span class="tp">int</span>, 3)
+<span class="nm">n</span>     := <span class="fn">copy</span>(<span class="nm">small</span>, <span class="nm">src</span>)          <span class="cm">// n=3, small=[1 2 3]</span>
+
+<span class="cm">// copy для []byte ← string (без выделения строки в heap)</span>
+<span class="nm">b</span> := <span class="fn">make</span>([]<span class="tp">byte</span>, 5)
+<span class="fn">copy</span>(<span class="nm">b</span>, <span class="st">"hello"</span>)                  <span class="cm">// b = [104 101 108 108 111]</span>
+
+<span class="cm">// Сдвиг вправо на 1 (перекрытие — безопасно)</span>
+<span class="nm">s</span> := []<span class="tp">int</span>{1, 2, 3, 4, 5}
+<span class="fn">copy</span>(<span class="nm">s</span>[1:], <span class="nm">s</span>)                    <span class="cm">// s = [1 1 2 3 4]</span></div>
+
+  <div class="pitfall">
+    Частая ошибка: <code class="code-inline">dst := make([]T, 0); copy(dst, src)</code> — скопируется 0 элементов, потому что len(dst)=0. Нужно: <code class="code-inline">dst := make([]T, len(src))</code> или заранее правильный len.
+  </div>
+
+  <!-- 6. NIL SLICE VS EMPTY SLICE -->
+  <div class="section-title">6. nil slice vs empty slice</div>
+
+  <div class="explain">
+    <p>
+      В большинстве операций nil slice и empty slice ведут себя одинаково: len и cap равны 0, append работает с обоими, range по обоим делает 0 итераций. Но есть два важных исключения: <span class="hl">JSON-сериализация</span> и <span class="hl">reflect.DeepEqual</span>.
+    </p>
+    <p>
+      nil slice сериализуется в <code class="code-inline">null</code>, empty slice — в <code class="code-inline">[]</code>. Для большинства API-ответов ожидается пустой массив, а не null — это частый баг в Go-сервисах.
+    </p>
+  </div>
+
+<div class="code-block"><span class="kw">var</span> <span class="nm">nilSlice</span>   []<span class="tp">int</span>           <span class="cm">// nil, len=0, cap=0</span>
+<span class="nm">emptySlice</span> := []<span class="tp">int</span>{}          <span class="cm">// НЕ nil, len=0, cap=0</span>
+<span class="nm">emptyMake</span>  := <span class="fn">make</span>([]<span class="tp">int</span>, 0)   <span class="cm">// НЕ nil, len=0, cap=0</span>
+
+<span class="pk">fmt</span>.<span class="fn">Println</span>(<span class="nm">nilSlice</span>   == <span class="kw">nil</span>)  <span class="cm">// true</span>
+<span class="pk">fmt</span>.<span class="fn">Println</span>(<span class="nm">emptySlice</span> == <span class="kw">nil</span>)  <span class="cm">// false</span>
+
+<span class="cm">// JSON: критическое различие</span>
+<span class="nm">data1</span>, _ := <span class="pk">json</span>.<span class="fn">Marshal</span>(<span class="nm">nilSlice</span>)    <span class="cm">// null</span>
+<span class="nm">data2</span>, _ := <span class="pk">json</span>.<span class="fn">Marshal</span>(<span class="nm">emptySlice</span>)  <span class="cm">// []</span>
+
+<span class="cm">// reflect: тоже различаются</span>
+<span class="nm">eq</span> := <span class="pk">reflect</span>.<span class="fn">DeepEqual</span>(<span class="nm">nilSlice</span>, <span class="nm">emptySlice</span>)  <span class="cm">// false</span>
+
+<span class="cm">// Операции: одинаково</span>
+<span class="nm">nilSlice</span> = <span class="fn">append</span>(<span class="nm">nilSlice</span>, 1)    <span class="cm">// ok</span>
+<span class="kw">for</span> <span class="kw">range</span> <span class="nm">nilSlice</span> {}              <span class="cm">// ok, 0 итераций</span></div>
+
+  <div class="note">
+    Правило для HTTP-хендлеров: если возвращаешь список и он пуст — возвращай <code class="code-inline">[]T{}</code>, а не nil. Клиент получит <code class="code-inline">[]</code> в JSON вместо <code class="code-inline">null</code>. Исключение: если контракт явно требует null для «отсутствует» vs <code class="code-inline">[]</code> для «пустой список».
+  </div>
+
+  <!-- 7. 2D СЛАЙСЫ -->
+  <div class="section-title">7. двумерные слайсы</div>
+
+  <div class="explain">
+    <p>
+      Двумерный слайс в Go — это <code class="code-inline">[][]T</code>: слайс слайсов. Есть два подхода: независимые строки (N+1 аллокаций, строки не связаны) и один большой блок (2 аллокации, лучше кэш-локальность, но строки делят память).
+    </p>
+  </div>
+
+<div class="code-block"><span class="kw">const</span> <span class="nm">rows</span>, <span class="nm">cols</span> = 3, 4
+
+<span class="cm">// ── Подход 1: независимые строки (N+1 аллокаций) ──</span>
+<span class="nm">matrix</span> := <span class="fn">make</span>([][]<span class="tp">int</span>, <span class="nm">rows</span>)
+<span class="kw">for</span> <span class="nm">i</span> := <span class="kw">range</span> <span class="nm">matrix</span> {
+    <span class="nm">matrix</span>[<span class="nm">i</span>] = <span class="fn">make</span>([]<span class="tp">int</span>, <span class="nm">cols</span>)  <span class="cm">// каждая строка независима</span>
+}
+<span class="nm">matrix</span>[1][2] = 42
+
+<span class="cm">// ── Подход 2: один backing array (2 аллокации, лучше GC) ──</span>
+<span class="nm">storage</span> := <span class="fn">make</span>([]<span class="tp">int</span>, <span class="nm">rows</span>*<span class="nm">cols</span>)
+<span class="nm">grid</span>    := <span class="fn">make</span>([][]<span class="tp">int</span>, <span class="nm">rows</span>)
+<span class="kw">for</span> <span class="nm">i</span> := <span class="kw">range</span> <span class="nm">grid</span> {
+    <span class="nm">grid</span>[<span class="nm">i</span>] = <span class="nm">storage</span>[<span class="nm">i</span>*<span class="nm">cols</span> : (<span class="nm">i</span>+1)*<span class="nm">cols</span>]
+}
+<span class="cm">// grid[0][3] и grid[1][0] — соседние ячейки в памяти (кэш-дружелюбно)</span></div>
+
+  <div class="pitfall">
+    В подходе 2 строки делят backing array. <code class="code-inline">append</code> в строку <code class="code-inline">grid[0]</code> за пределы <code class="code-inline">cols</code> перезапишет <code class="code-inline">grid[1]</code>. Защита: full slice expression при нарезке строк:
+    <code class="code-inline">storage[i*cols : (i+1)*cols : (i+1)*cols]</code> — ограничивает cap строки.
+  </div>
+
+  <!-- 8. ПРОИЗВОДИТЕЛЬНОСТЬ -->
+  <div class="section-title">8. производительность</div>
+
+  <div class="explain">
+    <p>
+      Каждая реаллокация backing array — это аллокация в heap, копирование всех элементов, дополнительная нагрузка на GC. При <code class="code-inline">n</code> элементах без pre-allocation происходит ~<code class="code-inline">log₂(n)</code> реаллокаций. При n=1000 это уже ~10 ненужных копирований.
+    </p>
+    <p>
+      Если финальный размер известен (или оценим) — всегда передавай capacity в make. Это одна из самых дешёвых оптимизаций в Go.
+    </p>
+  </div>
+
+<div class="code-block"><span class="cm">// ❌ Медленно: O(log n) реаллокаций</span>
+<span class="kw">var</span> <span class="nm">result</span> []<span class="tp">string</span>
+<span class="kw">for</span> _, <span class="nm">item</span> := <span class="kw">range</span> <span class="nm">items</span> {
+    <span class="nm">result</span> = <span class="fn">append</span>(<span class="nm">result</span>, <span class="fn">process</span>(<span class="nm">item</span>))
+}
+
+<span class="cm">// ✅ Быстро: одна аллокация заранее</span>
+<span class="nm">result</span> := <span class="fn">make</span>([]<span class="tp">string</span>, 0, <span class="fn">len</span>(<span class="nm">items</span>))
+<span class="kw">for</span> _, <span class="nm">item</span> := <span class="kw">range</span> <span class="nm">items</span> {
+    <span class="nm">result</span> = <span class="fn">append</span>(<span class="nm">result</span>, <span class="fn">process</span>(<span class="nm">item</span>))
+}
+
+<span class="cm">// ✅ Напрямую по индексу (размер точно известен)</span>
+<span class="nm">result</span> := <span class="fn">make</span>([]<span class="tp">string</span>, <span class="fn">len</span>(<span class="nm">items</span>))
+<span class="kw">for</span> <span class="nm">i</span>, <span class="nm">item</span> := <span class="kw">range</span> <span class="nm">items</span> {
+    <span class="nm">result</span>[<span class="nm">i</span>] = <span class="fn">process</span>(<span class="nm">item</span>)
+}
+
+<span class="cm">// Обнулить слайс без аллокации (переиспользование буфера)</span>
+<span class="nm">result</span> = <span class="nm">result</span>[:0]              <span class="cm">// len=0, cap сохранён, память не освобождена</span></div>
+
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">tip 1</span>
+      <div class="step-text">
+        <code class="code-inline">go test -bench=. -benchmem</code> показывает allocs/op. Хорошо оптимизированный горячий путь — 0 или 1 аллокаций.
+        <span class="dim">— benchstat сравнит до и после.</span>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">tip 2</span>
+      <div class="step-text">
+        <code class="code-inline">sync.Pool</code> + переиспользование через <code class="code-inline">s[:0]</code> убирает аллокации в обработчиках запросов.
+        <span class="dim">— Паттерн в fasthttp, zerolog, pgx.</span>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">tip 3</span>
+      <div class="step-text">
+        Конкатенация строк через <code class="code-inline">strings.Builder</code> — это тот же pre-allocated byte slice под капотом, но с удобным API.
+        <span class="dim">— <code class="code-inline">bytes.Buffer</code> — аналог для байт.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. CHEATSHEET -->
+  <div class="section-title">9. cheatsheet</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>операция</th>
+          <th>способ</th>
+          <th>примечание</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>nil-слайс</td>
+          <td><code class="code-inline">var s []T</code></td>
+          <td>nil, len=cap=0, append работает</td>
+        </tr>
+        <tr>
+          <td>пустой не-nil</td>
+          <td><code class="code-inline">[]T{}</code></td>
+          <td>для JSON → [], не null</td>
+        </tr>
+        <tr>
+          <td>с capacity</td>
+          <td><code class="code-inline">make([]T, 0, cap)</code></td>
+          <td>одна аллокация, append без роста до cap</td>
+        </tr>
+        <tr>
+          <td>n нулевых элементов</td>
+          <td><code class="code-inline">make([]T, n)</code></td>
+          <td>len=cap=n, доступны сразу по индексу</td>
+        </tr>
+        <tr>
+          <td>добавить элементы</td>
+          <td><code class="code-inline">s = append(s, v...)</code></td>
+          <td>всегда присваивать, может расти</td>
+        </tr>
+        <tr>
+          <td>независимая копия</td>
+          <td><code class="code-inline">dst := make([]T, len(s)); copy(dst, s)</code></td>
+          <td>нет shared backing array</td>
+        </tr>
+        <tr>
+          <td>безопасная нарезка</td>
+          <td><code class="code-inline">s[low:high:max]</code></td>
+          <td>cap=max−low, защита от append в оригинал</td>
+        </tr>
+        <tr>
+          <td>удалить элемент i</td>
+          <td><code class="code-inline">s = append(s[:i], s[i+1:]...)</code></td>
+          <td>O(n), порядок сохраняется</td>
+        </tr>
+        <tr>
+          <td>удалить без порядка</td>
+          <td><code class="code-inline">s[i] = s[len(s)-1]; s = s[:len(s)-1]</code></td>
+          <td>O(1), меняет порядок</td>
+        </tr>
+        <tr>
+          <td>обнулить (сохранить cap)</td>
+          <td><code class="code-inline">s = s[:0]</code></td>
+          <td>переиспользование буфера без аллокации</td>
+        </tr>
+        <tr>
+          <td>проверить nil</td>
+          <td><code class="code-inline">s == nil</code></td>
+          <td>empty slice ≠ nil, важно для JSON / reflect</td>
+        </tr>
+        <tr>
+          <td>слить два слайса</td>
+          <td><code class="code-inline">s = append(a, b...)</code></td>
+          <td>a должен иметь достаточный cap или вырастет</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-brand"><span>ghost</span>_dev</div>
+  <div class="footer-note">// backend engineering &amp; distributed systems</div>
+</footer>
+
+</body>
+</html>
