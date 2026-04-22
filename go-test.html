@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>go test — ghost_dev</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #161a23;
+    --border: #1e2230;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #69ff74;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-logo img { height: 28px; width: auto; }
+  .nav-logo span { color: var(--muted); }
+  .nav-sep { color: var(--border); font-size: 1.2rem; }
+
+  .nav-current {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .nav-back {
+    margin-left: auto;
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--accent); }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  .page-tag {
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+  h1 .hl { color: var(--accent); }
+
+  .lead {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 48px;
+    max-width: 620px;
+  }
+
+  /* ── SECTION ── */
+  .section { margin-bottom: 48px; }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── EXPLAIN ── */
+  .explain {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    font-size: 0.78rem;
+    line-height: 1.85;
+  }
+  .explain p { margin-bottom: 12px; }
+  .explain p:last-child { margin-bottom: 0; }
+  .explain .hl  { color: var(--accent); }
+  .explain .err { color: var(--accent2); }
+  .explain .ok  { color: var(--accent3); }
+
+  /* ── CODE INLINE ── */
+  code {
+    background: rgba(0,229,255,0.07);
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.74rem;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── CMD LIST ── */
+  .cmd-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .cmd-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .cmd-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent3);
+    flex-shrink: 0;
+    min-width: 260px;
+  }
+  .cmd-desc {
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.6;
+    padding-top: 1px;
+  }
+
+  /* ── TABS ── */
+  .tabs-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .tabs-header {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs-header::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    background: none;
+    border: none;
+    padding: 11px 18px;
+    cursor: pointer;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: var(--bg);
+    padding: 20px 24px;
+    overflow-x: auto;
+  }
+  .code-block pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.71rem;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre;
+  }
+
+  /* syntax highlight */
+  .kw  { color: #c792ea; }
+  .fn  { color: var(--accent3); }
+  .str { color: #f78c6c; }
+  .cm  { color: var(--muted); font-style: italic; }
+  .num { color: #f78c6c; }
+  .tp  { color: #ffcb6b; }
+  .ok  { color: var(--accent3); }
+  .err { color: var(--accent2); }
+  .cy  { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <img src="logo.png" alt="ghost_dev">
+    ghost<span>_</span>dev
+  </a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">go test</span>
+  <a href="index.html" class="nav-back">← назад</a>
+</nav>
+
+<div class="content">
+  <div class="page-tag">// go · testing</div>
+  <h1><span class="hl">go test</span> — тестирование в Go</h1>
+  <p class="lead">
+    Полный разбор инструментов тестирования: от базовых команд до табличных тестов, бенчмарков и моков без сторонних библиотек.
+  </p>
+
+  <!-- ───────────── 01 · BASICS ───────────── -->
+  <div class="section">
+    <div class="section-title">01 · basics</div>
+
+    <div class="explain">
+      <p>
+        Go поставляется со встроенным тестовым фреймворком: пакет <span class="hl">testing</span>
+        и команда <code>go test</code>. Тесты живут в файлах с суффиксом <code>_test.go</code>,
+        функции начинаются с <code>Test</code>. Никаких внешних зависимостей не нужно.
+      </p>
+    </div>
+
+    <div class="cmd-list">
+      <div class="cmd-item">
+        <span class="cmd-code">go test ./...</span>
+        <span class="cmd-desc">Запустить все тесты рекурсивно во всех пакетах</span>
+      </div>
+      <div class="cmd-item">
+        <span class="cmd-code">go test -v ./...</span>
+        <span class="cmd-desc">Verbose — показывает имя каждого теста и его статус</span>
+      </div>
+      <div class="cmd-item">
+        <span class="cmd-code">go test -run TestName ./...</span>
+        <span class="cmd-desc">Запустить только тесты, чьё имя соответствует regexp</span>
+      </div>
+      <div class="cmd-item">
+        <span class="cmd-code">go test -count=1 ./...</span>
+        <span class="cmd-desc">Отключить кеширование — count=1 форсирует перезапуск</span>
+      </div>
+      <div class="cmd-item">
+        <span class="cmd-code">go test -timeout 30s ./...</span>
+        <span class="cmd-desc">Установить таймаут (по умолчанию 10 минут)</span>
+      </div>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab(this,'b-struct')">структура файла</button>
+        <button class="tab-btn" onclick="switchTab(this,'b-simple')">простой тест</button>
+        <button class="tab-btn" onclick="switchTab(this,'b-output')">вывод -v</button>
+      </div>
+
+      <div class="tab-pane active" id="b-struct">
+        <div class="code-block"><pre><span class="cm">// math_test.go — тест-файл для пакета math</span>
+<span class="kw">package</span> math
+
+<span class="kw">import</span> (
+    <span class="str">"testing"</span>
+)
+
+<span class="cm">// Имя: Test + ЧтоПроверяем</span>
+<span class="kw">func</span> <span class="fn">TestAdd</span>(t *<span class="tp">testing.T</span>) {
+    got := <span class="fn">Add</span>(<span class="num">2</span>, <span class="num">3</span>)
+    want := <span class="num">5</span>
+
+    <span class="kw">if</span> got != want {
+        t.<span class="fn">Errorf</span>(<span class="str">"Add(2, 3) = %d, want %d"</span>, got, want)
+    }
+}
+
+<span class="cm">// TestMain — setup/teardown перед всеми тестами пакета</span>
+<span class="kw">func</span> <span class="fn">TestMain</span>(m *<span class="tp">testing.M</span>) {
+    <span class="cm">// setup...</span>
+    code := m.<span class="fn">Run</span>()
+    <span class="cm">// teardown...</span>
+    os.<span class="fn">Exit</span>(code)
+}</pre></div>
+      </div>
+
+      <div class="tab-pane" id="b-simple">
+        <div class="code-block"><pre><span class="kw">package</span> math
+
+<span class="kw">import</span> <span class="str">"testing"</span>
+
+<span class="kw">func</span> <span class="fn">TestDivide</span>(t *<span class="tp">testing.T</span>) {
+    result, err := <span class="fn">Divide</span>(<span class="num">10.0</span>, <span class="num">2.0</span>)
+    <span class="kw">if</span> err != <span class="kw">nil</span> {
+        t.<span class="fn">Fatalf</span>(<span class="str">"unexpected error: %v"</span>, err) <span class="cm">// Fatalf: останавливает тест</span>
+    }
+    <span class="kw">if</span> result != <span class="num">5.0</span> {
+        t.<span class="fn">Errorf</span>(<span class="str">"got %f, want 5.0"</span>, result) <span class="cm">// Errorf: продолжает тест</span>
+    }
+}
+
+<span class="kw">func</span> <span class="fn">TestDivideByZero</span>(t *<span class="tp">testing.T</span>) {
+    _, err := <span class="fn">Divide</span>(<span class="num">10.0</span>, <span class="num">0.0</span>)
+    <span class="kw">if</span> err == <span class="kw">nil</span> {
+        t.<span class="fn">Error</span>(<span class="str">"expected error, got nil"</span>)
+    }
+}</pre></div>
+      </div>
+
+      <div class="tab-pane" id="b-output">
+        <div class="code-block"><pre><span class="cm">$ go test -v ./math/...</span>
+
+<span class="ok">--- PASS: TestAdd (0.00s)</span>
+<span class="ok">--- PASS: TestDivide (0.00s)</span>
+<span class="err">--- FAIL: TestDivideByZero (0.00s)</span>
+    math_test.go:22: expected error, got nil
+<span class="ok">PASS</span>
+<span class="err">FAIL</span>    github.com/user/project/math    0.003s
+
+<span class="cm">$ go test -count=1 -run TestAdd ./math/...</span>
+<span class="ok">ok  	github.com/user/project/math	0.001s</span></pre></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────── 02 · TABLE-DRIVEN ───────────── -->
+  <div class="section">
+    <div class="section-title">02 · table-driven tests</div>
+
+    <div class="explain">
+      <p>
+        Идиоматический Go-паттерн: тест-кейсы описываются как срез структур и проходятся в цикле.
+        <span class="hl">Убирает дублирование</span> и позволяет добавлять новые случаи одной строкой.
+        В связке с <code>t.Run</code> каждый кейс становится именованным подтестом.
+      </p>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab(this,'tdt-basic')">базовый паттерн</button>
+        <button class="tab-btn" onclick="switchTab(this,'tdt-errors')">тест ошибок</button>
+        <button class="tab-btn" onclick="switchTab(this,'tdt-named')">named fields</button>
+      </div>
+
+      <div class="tab-pane active" id="tdt-basic">
+        <div class="code-block"><pre><span class="kw">func</span> <span class="fn">TestAdd</span>(t *<span class="tp">testing.T</span>) {
+    tests := []<span class="kw">struct</span> {
+        name string
+        a, b int
+        want int
+    }{
+        {<span class="str">"positive"</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">5</span>},
+        {<span class="str">"negative"</span>, -<span class="num">1</span>, -<span class="num">2</span>, -<span class="num">3</span>},
+        {<span class="str">"zero"</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>},
+        {<span class="str">"mixed"</span>, -<span class="num">5</span>, <span class="num">10</span>, <span class="num">5</span>},
+    }
+
+    <span class="kw">for</span> _, tt := <span class="kw">range</span> tests {
+        t.<span class="fn">Run</span>(tt.name, <span class="kw">func</span>(t *<span class="tp">testing.T</span>) {
+            got := <span class="fn">Add</span>(tt.a, tt.b)
+            <span class="kw">if</span> got != tt.want {
+                t.<span class="fn">Errorf</span>(<span class="str">"Add(%d, %d) = %d, want %d"</span>,
+                    tt.a, tt.b, got, tt.want)
+            }
+        })
+    }
+}</pre></div>
+      </div>
+
+      <div class="tab-pane" id="tdt-errors">
+        <div class="code-block"><pre><span class="kw">func</span> <span class="fn">TestDivide</span>(t *<span class="tp">testing.T</span>) {
+    tests := []<span class="kw">struct</span> {
+        name    string
+        a, b    float64
+        want    float64
+        wantErr bool
+    }{
+        {<span class="str">"normal"</span>, <span class="num">10</span>, <span class="num">2</span>, <span class="num">5</span>, <span class="kw">false</span>},
+        {<span class="str">"by zero"</span>, <span class="num">10</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="kw">true</span>},
+        {<span class="str">"negative"</span>, -<span class="num">6</span>, <span class="num">2</span>, -<span class="num">3</span>, <span class="kw">false</span>},
+    }
+
+    <span class="kw">for</span> _, tt := <span class="kw">range</span> tests {
+        t.<span class="fn">Run</span>(tt.name, <span class="kw">func</span>(t *<span class="tp">testing.T</span>) {
+            got, err := <span class="fn">Divide</span>(tt.a, tt.b)
+
+            <span class="kw">if</span> (err != <span class="kw">nil</span>) != tt.wantErr {
+                t.<span class="fn">Fatalf</span>(<span class="str">"err = %v, wantErr %v"</span>, err, tt.wantErr)
+            }
+            <span class="kw">if</span> !tt.wantErr &amp;&amp; got != tt.want {
+                t.<span class="fn">Errorf</span>(<span class="str">"got %v, want %v"</span>, got, tt.want)
+            }
+        })
+    }
+}</pre></div>
+      </div>
+
+      <div class="tab-pane" id="tdt-named">
+        <div class="code-block"><pre><span class="cm">// Явные имена полей — лучше читается при большой таблице</span>
+<span class="kw">func</span> <span class="fn">TestParseDate</span>(t *<span class="tp">testing.T</span>) {
+    tests := []<span class="kw">struct</span> {
+        name    string
+        input   string
+        want    time.Time
+        wantErr bool
+    }{
+        {
+            name:  <span class="str">"valid ISO"</span>,
+            input: <span class="str">"2024-01-15"</span>,
+            want:  time.<span class="fn">Date</span>(<span class="num">2024</span>, time.January, <span class="num">15</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>, time.UTC),
+        },
+        {
+            name:    <span class="str">"invalid format"</span>,
+            input:   <span class="str">"15/01/2024"</span>,
+            wantErr: <span class="kw">true</span>,
+        },
+        {
+            name:    <span class="str">"empty"</span>,
+            input:   <span class="str">""</span>,
+            wantErr: <span class="kw">true</span>,
+        },
+    }
+
+    <span class="kw">for</span> _, tt := <span class="kw">range</span> tests {
+        t.<span class="fn">Run</span>(tt.name, <span class="kw">func</span>(t *<span class="tp">testing.T</span>) {
+            got, err := <span class="fn">ParseDate</span>(tt.input)
+            <span class="kw">if</span> (err != <span class="kw">nil</span>) != tt.wantErr {
+                t.<span class="fn">Fatalf</span>(<span class="str">"wantErr=%v, got err=%v"</span>, tt.wantErr, err)
+            }
+            <span class="kw">if</span> !tt.wantErr &amp;&amp; !got.<span class="fn">Equal</span>(tt.want) {
+                t.<span class="fn">Errorf</span>(<span class="str">"got %v, want %v"</span>, got, tt.want)
+            }
+        })
+    }
+}</pre></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────── 03 · SUBTESTS ───────────── -->
+  <div class="section">
+    <div class="section-title">03 · subtests &amp; t.Parallel</div>
+
+    <div class="explain">
+      <p>
+        <code>t.Run</code> создаёт подтест с отдельным именем и изолированным состоянием.
+        Подтесты можно <span class="hl">фильтровать через <code>-run</code></span> по иерархическому имени
+        вида <code>TestParent/SubName</code>.
+      </p>
+      <p>
+        <code>t.Parallel()</code> сигнализирует, что подтест может выполняться параллельно с другими.
+        До Go 1.22 переменную цикла нужно было копировать вручную (<span class="err"><code>tt := tt</code></span>),
+        чтобы замыкание захватило правильное значение.
+      </p>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab(this,'sub-run')">t.Run</button>
+        <button class="tab-btn" onclick="switchTab(this,'sub-parallel')">t.Parallel</button>
+        <button class="tab-btn" onclick="switchTab(this,'sub-filter')">-run фильтрация</button>
+      </div>
+
+      <div class="tab-pane active" id="sub-run">
+        <div class="code-block"><pre><span class="kw">func</span> <span class="fn">TestUserService</span>(t *<span class="tp">testing.T</span>) {
+    svc := <span class="fn">NewUserService</span>()
+
+    t.<span class="fn">Run</span>(<span class="str">"Create"</span>, <span class="kw">func</span>(t *<span class="tp">testing.T</span>) {
+        user, err := svc.<span class="fn">Create</span>(<span class="str">"alice"</span>)
+        <span class="kw">if</span> err != <span class="kw">nil</span> {
+            t.<span class="fn">Fatalf</span>(<span class="str">"Create: %v"</span>, err)
+        }
+        <span class="kw">if</span> user.Name != <span class="str">"alice"</span> {
+            t.<span class="fn">Errorf</span>(<span class="str">"Name = %q, want %q"</span>, user.Name, <span class="str">"alice"</span>)
+        }
+    })
+
+    t.<span class="fn">Run</span>(<span class="str">"Get/existing"</span>, <span class="kw">func</span>(t *<span class="tp">testing.T</span>) {
+        _, err := svc.<span class="fn">Get</span>(<span class="num">1</span>)
+        <span class="kw">if</span> err != <span class="kw">nil</span> {
+            t.<span class="fn">Fatalf</span>(<span class="str">"Get: %v"</span>, err)
+        }
+    })
+
+    t.<span class="fn">Run</span>(<span class="str">"Get/notfound"</span>, <span class="kw">func</span>(t *<span class="tp">testing.T</span>) {
+        _, err := svc.<span class="fn">Get</span>(<span class="num">999</span>)
+        <span class="kw">if</span> err == <span class="kw">nil</span> {
+            t.<span class="fn">Error</span>(<span class="str">"expected ErrNotFound"</span>)
+        }
+    })
+}</pre></div>
+      </div>
+
+      <div class="tab-pane" id="sub-parallel">
+        <div class="code-block"><pre><span class="kw">func</span> <span class="fn">TestHeavyOps</span>(t *<span class="tp">testing.T</span>) {
+    tests := []<span class="kw">struct</span> {
+        name  string
+        input int
+        want  int
+    }{
+        {<span class="str">"small"</span>, <span class="num">10</span>, <span class="num">100</span>},
+        {<span class="str">"medium"</span>, <span class="num">100</span>, <span class="num">10000</span>},
+        {<span class="str">"large"</span>, <span class="num">1000</span>, <span class="num">1000000</span>},
+    }
+
+    <span class="kw">for</span> _, tt := <span class="kw">range</span> tests {
+        tt := tt <span class="cm">// копируем до t.Parallel() (нужно до Go 1.22)</span>
+        t.<span class="fn">Run</span>(tt.name, <span class="kw">func</span>(t *<span class="tp">testing.T</span>) {
+            t.<span class="fn">Parallel</span>() <span class="cm">// этот подтест может идти параллельно</span>
+
+            got := <span class="fn">Square</span>(tt.input)
+            <span class="kw">if</span> got != tt.want {
+                t.<span class="fn">Errorf</span>(<span class="str">"Square(%d) = %d, want %d"</span>,
+                    tt.input, got, tt.want)
+            }
+        })
+    }
+}</pre></div>
+      </div>
+
+      <div class="tab-pane" id="sub-filter">
+        <div class="code-block"><pre><span class="cm"># Все тесты пакета</span>
+go test -v ./...
+
+<span class="cm"># Только TestUserService</span>
+go test -v -run TestUserService ./...
+
+<span class="cm"># Подтест Create</span>
+go test -v -run TestUserService/Create ./...
+
+<span class="cm"># Все Get-подтесты</span>
+go test -v -run TestUserService/Get ./...
+
+<span class="cm"># Конкретный подтест через слеш-путь</span>
+go test -v -run "TestUserService/Get/notfound" ./...
+
+<span class="cm"># Regexp: всё начинающееся с TestUser</span>
+go test -v -run "^TestUser" ./...</pre></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────── 04 · BENCHMARKS ───────────── -->
+  <div class="section">
+    <div class="section-title">04 · benchmarks</div>
+
+    <div class="explain">
+      <p>
+        Бенчмарки — функции с сигнатурой <code>BenchmarkXxx(b *testing.B)</code>.
+        Go сам подбирает <code>b.N</code> — сколько раз запустить тело цикла для получения стабильного результата.
+        Запускаются только при явном флаге <code>-bench</code>.
+      </p>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab(this,'bn-write')">написать бенчмарк</button>
+        <button class="tab-btn" onclick="switchTab(this,'bn-run')">запуск и вывод</button>
+        <button class="tab-btn" onclick="switchTab(this,'bn-compare')">сравнение</button>
+      </div>
+
+      <div class="tab-pane active" id="bn-write">
+        <div class="code-block"><pre><span class="kw">package</span> math
+
+<span class="kw">import</span> <span class="str">"testing"</span>
+
+<span class="kw">func</span> <span class="fn">BenchmarkAdd</span>(b *<span class="tp">testing.B</span>) {
+    <span class="cm">// b.N определяется Go автоматически</span>
+    <span class="kw">for</span> i := <span class="num">0</span>; i &lt; b.N; i++ {
+        <span class="fn">Add</span>(<span class="num">2</span>, <span class="num">3</span>)
+    }
+}
+
+<span class="kw">func</span> <span class="fn">BenchmarkStringConcat</span>(b *<span class="tp">testing.B</span>) {
+    b.<span class="fn">ReportAllocs</span>() <span class="cm">// включить отчёт по аллокациям</span>
+    <span class="kw">for</span> i := <span class="num">0</span>; i &lt; b.N; i++ {
+        s := <span class="str">""</span>
+        <span class="kw">for</span> j := <span class="num">0</span>; j &lt; <span class="num">100</span>; j++ {
+            s += <span class="str">"x"</span>
+        }
+        _ = s
+    }
+}
+
+<span class="kw">func</span> <span class="fn">BenchmarkStringBuilder</span>(b *<span class="tp">testing.B</span>) {
+    b.<span class="fn">ReportAllocs</span>()
+    <span class="kw">for</span> i := <span class="num">0</span>; i &lt; b.N; i++ {
+        <span class="kw">var</span> sb strings.<span class="tp">Builder</span>
+        <span class="kw">for</span> j := <span class="num">0</span>; j &lt; <span class="num">100</span>; j++ {
+            sb.<span class="fn">WriteString</span>(<span class="str">"x"</span>)
+        }
+        _ = sb.<span class="fn">String</span>()
+    }
+}</pre></div>
+      </div>
+
+      <div class="tab-pane" id="bn-run">
+        <div class="code-block"><pre><span class="cm"># Все бенчмарки в пакете</span>
+go test -bench=. ./...
+
+<span class="cm"># Конкретный бенчмарк</span>
+go test -bench=BenchmarkStringConcat ./...
+
+<span class="cm"># С метриками памяти</span>
+go test -bench=. -benchmem ./...
+
+<span class="cm">Результат:</span>
+BenchmarkAdd-8               1000000000    0.24 ns/op
+BenchmarkStringConcat-8          167738    7116 ns/op    5296 B/op    99 allocs/op
+BenchmarkStringBuilder-8        2793794     430 ns/op     504 B/op     6 allocs/op
+
+<span class="cm">#  Имя-N       │ итерации │  нс/оп  │  байт/оп │ аллок/оп
+#  -8 = GOMAXPROCS
+#
+# StringBuilder быстрее в 16x, аллокаций в 16x меньше</span></pre></div>
+      </div>
+
+      <div class="tab-pane" id="bn-compare">
+        <div class="code-block"><pre><span class="cm"># Сравнение двух реализаций через benchstat</span>
+
+<span class="cm"># 1. Записать результаты до изменений</span>
+go test -bench=. -benchmem -count=5 ./... &gt; old.txt
+
+<span class="cm"># 2. Внести правки, записать новые результаты</span>
+go test -bench=. -benchmem -count=5 ./... &gt; new.txt
+
+<span class="cm"># 3. Сравнить</span>
+go install golang.org/x/perf/cmd/benchstat@latest
+benchstat old.txt new.txt
+
+<span class="cm">#              │   old.txt   │            new.txt            │
+#              │   sec/op    │   sec/op     vs base           │
+# Process-8    │ 7116ns ± 0% │ 430ns ± 0%  -93.95% (p=0.008) │</span>
+
+<span class="cm"># b.ResetTimer() — не считать время setup в бенчмарке</span>
+<span class="kw">func</span> <span class="fn">BenchmarkWithSetup</span>(b *<span class="tp">testing.B</span>) {
+    data := <span class="fn">prepareHeavyData</span>()
+    b.<span class="fn">ResetTimer</span>()
+    <span class="kw">for</span> i := <span class="num">0</span>; i &lt; b.N; i++ {
+        <span class="fn">Process</span>(data)
+    }
+}</pre></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────── 05 · HELPERS ───────────── -->
+  <div class="section">
+    <div class="section-title">05 · test helpers &amp; t.Helper()</div>
+
+    <div class="explain">
+      <p>
+        Хелперы — обычные функции, принимающие <code>*testing.T</code> и инкапсулирующие повторяющиеся проверки.
+        Вызов <code>t.Helper()</code> указывает Go, что при ошибке нужно показывать
+        <span class="hl">строку вызова хелпера</span>, а не строку внутри него.
+        Без этого дебажить провальные тесты значительно сложнее.
+      </p>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab(this,'h-without')">без t.Helper</button>
+        <button class="tab-btn" onclick="switchTab(this,'h-with')">с t.Helper()</button>
+        <button class="tab-btn" onclick="switchTab(this,'h-patterns')">паттерны</button>
+      </div>
+
+      <div class="tab-pane active" id="h-without">
+        <div class="code-block"><pre><span class="cm">// ❌ Без t.Helper() — ошибка укажет на строку внутри assertEqual</span>
+
+<span class="kw">func</span> <span class="fn">assertEqual</span>(t *<span class="tp">testing.T</span>, got, want <span class="kw">interface</span>{}) {
+    <span class="cm">// нет t.Helper()</span>
+    <span class="kw">if</span> got != want {
+        t.<span class="fn">Errorf</span>(<span class="str">"got %v, want %v"</span>, got, want)
+        <span class="cm">// ↑ ошибка покажет эту строку — бесполезно</span>
+    }
+}
+
+<span class="kw">func</span> <span class="fn">TestSomething</span>(t *<span class="tp">testing.T</span>) {
+    <span class="fn">assertEqual</span>(t, <span class="fn">Add</span>(<span class="num">1</span>, <span class="num">2</span>), <span class="num">4</span>)
+    <span class="cm">// ↑ хотим видеть эту строку при провале</span>
+}
+
+<span class="cm">// Вывод:
+//   helpers_test.go:4: got 3, want 4   ← строка в хелпере, не в тесте</span></pre></div>
+      </div>
+
+      <div class="tab-pane" id="h-with">
+        <div class="code-block"><pre><span class="cm">// ✅ С t.Helper() — ошибка укажет на строку вызова</span>
+
+<span class="kw">func</span> <span class="fn">assertEqual</span>[T comparable](t *<span class="tp">testing.T</span>, got, want T) {
+    t.<span class="fn">Helper</span>() <span class="cm">// вот и всё изменение</span>
+    <span class="kw">if</span> got != want {
+        t.<span class="fn">Errorf</span>(<span class="str">"got %v, want %v"</span>, got, want)
+    }
+}
+
+<span class="kw">func</span> <span class="fn">assertNoError</span>(t *<span class="tp">testing.T</span>, err <span class="tp">error</span>) {
+    t.<span class="fn">Helper</span>()
+    <span class="kw">if</span> err != <span class="kw">nil</span> {
+        t.<span class="fn">Fatalf</span>(<span class="str">"unexpected error: %v"</span>, err)
+    }
+}
+
+<span class="kw">func</span> <span class="fn">TestSomething</span>(t *<span class="tp">testing.T</span>) {
+    result, err := <span class="fn">Divide</span>(<span class="num">1</span>, <span class="num">2</span>)
+    <span class="fn">assertNoError</span>(t, err)
+    <span class="fn">assertEqual</span>(t, result, <span class="num">4</span>)
+    <span class="cm">// ↑ теперь ошибка укажет именно на эту строку</span>
+}
+
+<span class="cm">// Вывод:
+//   something_test.go:14: got 3, want 4   ← строка в тесте</span></pre></div>
+      </div>
+
+      <div class="tab-pane" id="h-patterns">
+        <div class="code-block"><pre><span class="cm">// Хелпер для создания тестовых данных</span>
+<span class="kw">func</span> <span class="fn">mustCreateUser</span>(t *<span class="tp">testing.T</span>, svc *<span class="tp">UserService</span>, name <span class="tp">string</span>) *<span class="tp">User</span> {
+    t.<span class="fn">Helper</span>()
+    user, err := svc.<span class="fn">Create</span>(name)
+    <span class="kw">if</span> err != <span class="kw">nil</span> {
+        t.<span class="fn">Fatalf</span>(<span class="str">"mustCreateUser: %v"</span>, err)
+    }
+    <span class="kw">return</span> user
+}
+
+<span class="cm">// t.Cleanup — регистрирует teardown, вызывается после теста</span>
+<span class="kw">func</span> <span class="fn">setupDB</span>(t *<span class="tp">testing.T</span>) *<span class="tp">sql.DB</span> {
+    t.<span class="fn">Helper</span>()
+    db, err := sql.<span class="fn">Open</span>(<span class="str">"postgres"</span>, testDSN)
+    <span class="kw">if</span> err != <span class="kw">nil</span> {
+        t.<span class="fn">Fatalf</span>(<span class="str">"open db: %v"</span>, err)
+    }
+    t.<span class="fn">Cleanup</span>(<span class="kw">func</span>() { db.<span class="fn">Close</span>() }) <span class="cm">// автоматический teardown</span>
+    <span class="kw">return</span> db
+}
+
+<span class="cm">// Использование</span>
+<span class="kw">func</span> <span class="fn">TestOrder</span>(t *<span class="tp">testing.T</span>) {
+    db := <span class="fn">setupDB</span>(t) <span class="cm">// db.Close() вызовется сам</span>
+    user := <span class="fn">mustCreateUser</span>(t, <span class="fn">NewUserService</span>(db), <span class="str">"alice"</span>)
+    _ = user
+}</pre></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────── 06 · MOCKS ───────────── -->
+  <div class="section">
+    <div class="section-title">06 · моки через интерфейсы</div>
+
+    <div class="explain">
+      <p>
+        В Go не нужны тяжёлые mock-фреймворки для базовых случаев.
+        Интерфейсы — это <span class="hl">встроенный механизм мокирования</span>: опишите зависимость как интерфейс,
+        создайте тестовую реализацию, передайте её в конструктор.
+        Реальный код зависит от интерфейса, а не от конкретного типа.
+      </p>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab(this,'mk-iface')">интерфейс</button>
+        <button class="tab-btn" onclick="switchTab(this,'mk-impl')">мок-реализация</button>
+        <button class="tab-btn" onclick="switchTab(this,'mk-test')">тест</button>
+      </div>
+
+      <div class="tab-pane active" id="mk-iface">
+        <div class="code-block"><pre><span class="cm">// Описываем зависимость как интерфейс</span>
+<span class="kw">type</span> <span class="tp">EmailSender</span> <span class="kw">interface</span> {
+    <span class="fn">Send</span>(to, subject, body <span class="tp">string</span>) <span class="tp">error</span>
+}
+
+<span class="cm">// Сервис принимает интерфейс, не конкретный тип</span>
+<span class="kw">type</span> <span class="tp">NotificationService</span> <span class="kw">struct</span> {
+    email <span class="tp">EmailSender</span>
+}
+
+<span class="kw">func</span> <span class="fn">NewNotificationService</span>(e <span class="tp">EmailSender</span>) *<span class="tp">NotificationService</span> {
+    <span class="kw">return</span> &amp;<span class="tp">NotificationService</span>{email: e}
+}
+
+<span class="kw">func</span> (s *<span class="tp">NotificationService</span>) <span class="fn">NotifyUser</span>(to, msg <span class="tp">string</span>) <span class="tp">error</span> {
+    <span class="kw">return</span> s.email.<span class="fn">Send</span>(to, <span class="str">"Уведомление"</span>, msg)
+}
+
+<span class="cm">// Продакшн-реализация</span>
+<span class="kw">type</span> <span class="tp">SMTPSender</span> <span class="kw">struct</span>{ host <span class="tp">string</span> }
+
+<span class="kw">func</span> (s *<span class="tp">SMTPSender</span>) <span class="fn">Send</span>(to, subj, body <span class="tp">string</span>) <span class="tp">error</span> {
+    <span class="cm">// реальная отправка через SMTP...</span>
+    <span class="kw">return</span> <span class="kw">nil</span>
+}</pre></div>
+      </div>
+
+      <div class="tab-pane" id="mk-impl">
+        <div class="code-block"><pre><span class="cm">// mock_test.go — тестовая реализация EmailSender</span>
+<span class="kw">type</span> <span class="tp">mockEmailSender</span> <span class="kw">struct</span> {
+    sent []<span class="tp">sentEmail</span>
+    err  <span class="tp">error</span> <span class="cm">// если задан — Send вернёт его</span>
+}
+
+<span class="kw">type</span> <span class="tp">sentEmail</span> <span class="kw">struct</span> {
+    to, subject, body <span class="tp">string</span>
+}
+
+<span class="kw">func</span> (m *<span class="tp">mockEmailSender</span>) <span class="fn">Send</span>(to, subj, body <span class="tp">string</span>) <span class="tp">error</span> {
+    <span class="kw">if</span> m.err != <span class="kw">nil</span> {
+        <span class="kw">return</span> m.err
+    }
+    m.sent = <span class="fn">append</span>(m.sent, <span class="tp">sentEmail</span>{to, subj, body})
+    <span class="kw">return</span> <span class="kw">nil</span>
+}
+
+<span class="cm">// Compile-time проверка что мок реализует интерфейс</span>
+<span class="kw">var</span> _ <span class="tp">EmailSender</span> = (*<span class="tp">mockEmailSender</span>)(<span class="kw">nil</span>)</pre></div>
+      </div>
+
+      <div class="tab-pane" id="mk-test">
+        <div class="code-block"><pre><span class="kw">func</span> <span class="fn">TestNotifyUser</span>(t *<span class="tp">testing.T</span>) {
+    t.<span class="fn">Run</span>(<span class="str">"success"</span>, <span class="kw">func</span>(t *<span class="tp">testing.T</span>) {
+        mock := &amp;<span class="tp">mockEmailSender</span>{}
+        svc := <span class="fn">NewNotificationService</span>(mock)
+
+        err := svc.<span class="fn">NotifyUser</span>(<span class="str">"user@example.com"</span>, <span class="str">"hello"</span>)
+        <span class="kw">if</span> err != <span class="kw">nil</span> {
+            t.<span class="fn">Fatalf</span>(<span class="str">"unexpected error: %v"</span>, err)
+        }
+        <span class="kw">if</span> <span class="fn">len</span>(mock.sent) != <span class="num">1</span> {
+            t.<span class="fn">Fatalf</span>(<span class="str">"expected 1 sent email, got %d"</span>, <span class="fn">len</span>(mock.sent))
+        }
+        <span class="kw">if</span> mock.sent[<span class="num">0</span>].to != <span class="str">"user@example.com"</span> {
+            t.<span class="fn">Errorf</span>(<span class="str">"wrong recipient: %s"</span>, mock.sent[<span class="num">0</span>].to)
+        }
+    })
+
+    t.<span class="fn">Run</span>(<span class="str">"sender error"</span>, <span class="kw">func</span>(t *<span class="tp">testing.T</span>) {
+        mock := &amp;<span class="tp">mockEmailSender</span>{err: errors.<span class="fn">New</span>(<span class="str">"smtp down"</span>)}
+        svc := <span class="fn">NewNotificationService</span>(mock)
+
+        err := svc.<span class="fn">NotifyUser</span>(<span class="str">"user@example.com"</span>, <span class="str">"hello"</span>)
+        <span class="kw">if</span> err == <span class="kw">nil</span> {
+            t.<span class="fn">Error</span>(<span class="str">"expected error"</span>)
+        }
+    })
+}</pre></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────── 07 · COVERAGE ───────────── -->
+  <div class="section">
+    <div class="section-title">07 · coverage</div>
+
+    <div class="explain">
+      <p>
+        Go умеет измерять покрытие без внешних инструментов.
+        <span class="err">100% coverage не означает отсутствие багов</span> — это лишь метрика того, что каждая строчка
+        была выполнена. Фокусируйтесь на покрытии <span class="hl">граничных случаев и путей ошибок</span>.
+      </p>
+    </div>
+
+    <div class="cmd-list">
+      <div class="cmd-item">
+        <span class="cmd-code">go test -cover ./...</span>
+        <span class="cmd-desc">Показать процент покрытия для каждого пакета</span>
+      </div>
+      <div class="cmd-item">
+        <span class="cmd-code">go test -coverprofile=c.out ./...</span>
+        <span class="cmd-desc">Сохранить детальный профиль покрытия в файл</span>
+      </div>
+      <div class="cmd-item">
+        <span class="cmd-code">go tool cover -html=c.out</span>
+        <span class="cmd-desc">HTML-отчёт с подсветкой: зелёный — покрыто, красный — нет</span>
+      </div>
+      <div class="cmd-item">
+        <span class="cmd-code">go tool cover -func=c.out</span>
+        <span class="cmd-desc">Покрытие по каждой функции в терминале</span>
+      </div>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab(this,'cv-output')">вывод -cover</button>
+        <button class="tab-btn" onclick="switchTab(this,'cv-func')">-func вывод</button>
+        <button class="tab-btn" onclick="switchTab(this,'cv-ci')">CI интеграция</button>
+      </div>
+
+      <div class="tab-pane active" id="cv-output">
+        <div class="code-block"><pre><span class="cm">$ go test -cover ./...</span>
+<span class="ok">ok</span>   github.com/user/project/math      coverage: 87.5% of statements
+<span class="ok">ok</span>   github.com/user/project/service   coverage: 72.3% of statements
+<span class="ok">ok</span>   github.com/user/project/handler   coverage: 91.0% of statements
+
+<span class="cm">$ go test -coverprofile=coverage.out ./...
+$ go tool cover -html=coverage.out</span>
+<span class="cm"># Откроется браузер:
+#   зелёный — строка покрыта тестами
+#   красный  — строка НЕ покрыта
+#   серый    — не исполняемый код</span></pre></div>
+      </div>
+
+      <div class="tab-pane" id="cv-func">
+        <div class="code-block"><pre><span class="cm">$ go tool cover -func=coverage.out</span>
+
+github.com/user/project/math/math.go:5:    Add          100.0%
+github.com/user/project/math/math.go:10:   Divide       100.0%
+github.com/user/project/math/math.go:18:   Factorial     75.0%
+github.com/user/project/service/svc.go:12: NotifyUser   100.0%
+github.com/user/project/service/svc.go:28: SendBatch     33.3%
+
+total:                                      (statements)  82.4%
+
+<span class="cm"># SendBatch 33.3% — явный сигнал, что нужно больше тестов</span></pre></div>
+      </div>
+
+      <div class="tab-pane" id="cv-ci">
+        <div class="code-block"><pre><span class="cm"># .github/workflows/test.yml</span>
+- name: Run tests with coverage
+  run: |
+    go test -coverprofile=coverage.out -covermode=atomic ./...
+    go tool cover -func=coverage.out
+
+<span class="cm"># covermode варианты:
+#   set    — была ли строка выполнена (по умолчанию)
+#   count  — сколько раз выполнена
+#   atomic — как count, но thread-safe (параллельные тесты)</span>
+
+<span class="cm"># Итоговый процент одной командой:</span>
+go test ./... -coverprofile=cov.out &amp;&amp; \
+  go tool cover -func=cov.out | tail -1
+<span class="cm"># total: (statements)  82.4%</span></pre></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<script>
+function switchTab(btn, paneId) {
+  var wrap = btn.closest('.tabs-wrap');
+  wrap.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  wrap.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById(paneId).classList.add('active');
+}
+</script>
+
+</body>
+</html>
