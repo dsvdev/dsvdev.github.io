@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Go Context — ghost_dev</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2230;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #69ff74;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+
+  .nav-logo span { color: var(--muted); }
+
+  .nav-sep { color: var(--border); font-size: 1.2rem; }
+
+  .nav-current {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  .page-tag {
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--text);
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+
+  h1 .hl { color: var(--accent); }
+
+  .lead {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 40px;
+    max-width: 600px;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── EXPLANATION BLOCK ── */
+  .explain {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    font-size: 0.78rem;
+    line-height: 1.85;
+    color: var(--text);
+  }
+
+  .explain p { margin-bottom: 14px; }
+  .explain p:last-child { margin-bottom: 0; }
+  .explain .hl  { color: var(--accent); }
+  .explain .err { color: var(--accent2); }
+  .explain .ok  { color: var(--accent3); }
+
+  .code-inline {
+    background: rgba(0,229,255,0.07);
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: #0d0f14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin-bottom: 24px;
+  }
+
+  .code-block pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  /* syntax highlight */
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .tp { color: #ffcb6b; }
+  .st { color: var(--accent3); }
+  .cm { color: #546e7a; font-style: italic; }
+  .nm { color: #f07178; }
+  .pk { color: var(--accent); }
+
+  /* ── CARDS GRID ── */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    font-size: 0.72rem;
+    line-height: 1.7;
+  }
+
+  .card-icon { font-size: 1.3rem; margin-bottom: 10px; }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .card-desc { color: var(--muted); }
+
+  /* ── PITFALL ── */
+  .pitfall {
+    background: rgba(255,77,109,0.05);
+    border: 1px solid rgba(255,77,109,0.2);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 32px;
+    font-size: 0.72rem;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .pitfall-label {
+    font-size: 0.6rem;
+    color: var(--accent2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* ── NOTE ── */
+  .note {
+    background: rgba(0,229,255,0.04);
+    border: 1px solid rgba(0,229,255,0.12);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 32px;
+    font-size: 0.72rem;
+    line-height: 1.75;
+    color: var(--muted);
+  }
+
+  .note-label {
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* ── STEPS ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.7rem;
+    color: var(--accent);
+    background: rgba(0,229,255,0.08);
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 6px;
+    padding: 3px 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    margin-top: 1px;
+  }
+
+  .step-text {
+    font-size: 0.74rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .step-text .dim { color: var(--muted); }
+
+  /* ── CHEATSHEET TABLE ── */
+  .table-wrap {
+    overflow-x: auto;
+    margin-bottom: 32px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+  }
+
+  thead th {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 14px;
+    text-align: left;
+  }
+
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    line-height: 1.6;
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--surface); }
+
+  td.api { color: var(--accent); }
+  td.when { color: var(--muted); font-size: 0.69rem; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .footer-brand span { color: var(--accent); }
+
+  .footer-note {
+    font-size: 0.65rem;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">ghost<span>_</span>dev</a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">Go Context</span>
+</nav>
+
+<div class="content">
+  <div class="page-tag">// go internals</div>
+  <h1>Go <span class="hl">context.Context</span></h1>
+  <p class="lead">
+    Стандартный механизм управления жизненным циклом операций в Go. Отменяет запросы, задаёт дедлайны и передаёт данные между горутинами без засорения сигнатур функций.
+  </p>
+
+  <!-- зачем нужен context -->
+  <div class="section-title">зачем нужен context</div>
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-icon">🚫</div>
+      <div class="card-title">Отмена операций</div>
+      <div class="card-desc">Клиент закрыл соединение — незачем продолжать вычисления. ctx.Done() сигнализирует всем дочерним горутинам одновременно.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">⏱</div>
+      <div class="card-title">Дедлайны и таймауты</div>
+      <div class="card-desc">Внешний сервис отвечает слишком долго. WithTimeout гарантирует, что запрос не зависнет навсегда.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔗</div>
+      <div class="card-title">Передача значений</div>
+      <div class="card-desc">Request-scoped данные (trace ID, userID) передаются через весь стек вызовов без изменения каждой функции.</div>
+    </div>
+  </div>
+  <div class="explain">
+    <p>
+      Каждый HTTP-запрос порождает горутину, которая вызывает БД, которая вызывает кэш, которая вызывает внешний API.
+      Если клиент отключился — <span class="err">все эти горутины продолжают работать впустую</span>.
+    </p>
+    <p>
+      <span class="hl">context.Context</span> — это дерево отмены. Когда родительский контекст отменяется,
+      все дочерние получают сигнал через канал <code class="code-inline">Done()</code>.
+      Каждая функция в цепочке должна слушать этот канал и корректно завершаться.
+    </p>
+  </div>
+
+  <!-- Background и TODO -->
+  <div class="section-title">context.Background() и context.TODO()</div>
+  <div class="explain">
+    <p>
+      <code class="code-inline">context.Background()</code> — пустой корневой контекст без дедлайна, отмены и значений.
+      Используй в <span class="hl">точках входа</span>: <code class="code-inline">main()</code>, обработчиках HTTP-запросов, тестах.
+    </p>
+    <p>
+      <code class="code-inline">context.TODO()</code> семантически идентичен Background, но сигнализирует:
+      <span class="err">«я пока не знаю, какой контекст здесь нужен»</span>.
+      Полезен при рефакторинге — grep по TODO() находит места, которые ещё не доработаны.
+    </p>
+  </div>
+  <div class="code-block"><pre>
+<span class="kw">func</span> <span class="fn">main</span>() {
+    <span class="cm">// точка входа — всегда Background</span>
+    <span class="nm">ctx</span> := <span class="pk">context</span>.<span class="fn">Background</span>()
+    <span class="fn">runServer</span>(<span class="nm">ctx</span>)
+}
+
+<span class="kw">func</span> <span class="fn">RequestIDMiddleware</span>(<span class="nm">next</span> <span class="tp">http.Handler</span>) <span class="tp">http.Handler</span> {
+    <span class="kw">return</span> <span class="pk">http</span>.<span class="fn">HandlerFunc</span>(<span class="kw">func</span>(<span class="nm">w</span> <span class="tp">http.ResponseWriter</span>, <span class="nm">r</span> *<span class="tp">http.Request</span>) {
+        <span class="cm">// r.Context() уже несёт отмену при разрыве соединения</span>
+        <span class="nm">ctx</span> := <span class="pk">context</span>.<span class="fn">WithValue</span>(<span class="nm">r</span>.<span class="fn">Context</span>(), <span class="nm">reqIDKey</span>, <span class="nm">r</span>.<span class="nm">Header</span>.<span class="fn">Get</span>(<span class="st">"X-Request-ID"</span>))
+        <span class="nm">next</span>.<span class="fn">ServeHTTP</span>(<span class="nm">w</span>, <span class="nm">r</span>.<span class="fn">WithContext</span>(<span class="nm">ctx</span>))
+    })
+}
+
+<span class="kw">func</span> <span class="fn">legacyFn</span>() {
+    <span class="cm">// TODO: добавить ctx когда будем рефакторить этот слой</span>
+    <span class="nm">ctx</span> := <span class="pk">context</span>.<span class="fn">TODO</span>()
+    <span class="fn">doWork</span>(<span class="nm">ctx</span>)
+}</pre></div>
+
+  <!-- WithCancel -->
+  <div class="section-title">context.WithCancel</div>
+  <div class="explain">
+    <p>
+      Возвращает дочерний контекст и функцию <code class="code-inline">cancel()</code>.
+      Вызов <code class="code-inline">cancel()</code> закрывает канал <code class="code-inline">ctx.Done()</code> —
+      все горутины, ждущие этого сигнала, получают его одновременно.
+    </p>
+    <p>
+      Основной паттерн: запускаешь несколько горутин, в одной приходит ошибка —
+      <span class="hl">отменяешь все остальные</span> одним вызовом cancel().
+    </p>
+  </div>
+  <div class="code-block"><pre>
+<span class="kw">package</span> <span class="pk">main</span>
+
+<span class="kw">import</span> (
+    <span class="st">"context"</span>
+    <span class="st">"fmt"</span>
+    <span class="st">"time"</span>
+)
+
+<span class="kw">func</span> <span class="fn">worker</span>(<span class="nm">ctx</span> <span class="pk">context</span>.<span class="tp">Context</span>, <span class="nm">id</span> <span class="tp">int</span>) {
+    <span class="kw">for</span> {
+        <span class="kw">select</span> {
+        <span class="kw">case</span> &lt;-<span class="nm">ctx</span>.<span class="fn">Done</span>():
+            <span class="pk">fmt</span>.<span class="fn">Printf</span>(<span class="st">"worker %d остановлен: %v\n"</span>, <span class="nm">id</span>, <span class="nm">ctx</span>.<span class="fn">Err</span>())
+            <span class="kw">return</span>
+        <span class="kw">default</span>:
+            <span class="pk">fmt</span>.<span class="fn">Printf</span>(<span class="st">"worker %d работает...\n"</span>, <span class="nm">id</span>)
+            <span class="pk">time</span>.<span class="fn">Sleep</span>(<span class="nm">500</span> * <span class="pk">time</span>.<span class="nm">Millisecond</span>)
+        }
+    }
+}
+
+<span class="kw">func</span> <span class="fn">main</span>() {
+    <span class="nm">ctx</span>, <span class="nm">cancel</span> := <span class="pk">context</span>.<span class="fn">WithCancel</span>(<span class="pk">context</span>.<span class="fn">Background</span>())
+    <span class="kw">defer</span> <span class="fn">cancel</span>() <span class="cm">// всегда defer cancel — иначе goroutine leak</span>
+
+    <span class="kw">go</span> <span class="fn">worker</span>(<span class="nm">ctx</span>, <span class="nm">1</span>)
+    <span class="kw">go</span> <span class="fn">worker</span>(<span class="nm">ctx</span>, <span class="nm">2</span>)
+
+    <span class="pk">time</span>.<span class="fn">Sleep</span>(<span class="nm">2</span> * <span class="pk">time</span>.<span class="nm">Second</span>)
+    <span class="fn">cancel</span>() <span class="cm">// оба worker'а получат сигнал и остановятся</span>
+    <span class="pk">time</span>.<span class="fn">Sleep</span>(<span class="nm">100</span> * <span class="pk">time</span>.<span class="nm">Millisecond</span>)
+}</pre></div>
+  <div class="pitfall">
+    <div class="pitfall-label">⚠ подводный камень</div>
+    Всегда вызывай <code class="code-inline">cancel()</code> — даже если контекст уже истёк сам по себе. Иначе runtime удерживает внутренние таймеры и ресурсы до следующей GC. Паттерн <code class="code-inline">defer cancel()</code> сразу после создания контекста полностью решает эту проблему.
+  </div>
+
+  <!-- WithTimeout -->
+  <div class="section-title">context.WithTimeout</div>
+  <div class="explain">
+    <p>
+      Автоматически отменяет контекст через указанный промежуток времени.
+      Идеален для HTTP-клиентов, запросов к БД, вызовов внешних сервисов —
+      везде, где нельзя ждать бесконечно.
+    </p>
+    <p>
+      <span class="hl">http.NewRequestWithContext</span> — правильный способ привязать контекст к HTTP-запросу.
+      Если сервер не ответит вовремя, запрос будет отменён с ошибкой
+      <code class="code-inline">context.DeadlineExceeded</code>.
+    </p>
+  </div>
+  <div class="code-block"><pre>
+<span class="kw">package</span> <span class="pk">main</span>
+
+<span class="kw">import</span> (
+    <span class="st">"context"</span>
+    <span class="st">"fmt"</span>
+    <span class="st">"net/http"</span>
+    <span class="st">"time"</span>
+)
+
+<span class="kw">func</span> <span class="fn">fetchUser</span>(<span class="nm">userID</span> <span class="tp">string</span>) (<span class="tp">int</span>, <span class="tp">error</span>) {
+    <span class="nm">ctx</span>, <span class="nm">cancel</span> := <span class="pk">context</span>.<span class="fn">WithTimeout</span>(<span class="pk">context</span>.<span class="fn">Background</span>(), <span class="nm">3</span>*<span class="pk">time</span>.<span class="nm">Second</span>)
+    <span class="kw">defer</span> <span class="fn">cancel</span>()
+
+    <span class="nm">url</span> := <span class="pk">fmt</span>.<span class="fn">Sprintf</span>(<span class="st">"https://api.example.com/users/%s"</span>, <span class="nm">userID</span>)
+    <span class="nm">req</span>, <span class="nm">err</span> := <span class="pk">http</span>.<span class="fn">NewRequestWithContext</span>(<span class="nm">ctx</span>, <span class="pk">http</span>.<span class="nm">MethodGet</span>, <span class="nm">url</span>, <span class="kw">nil</span>)
+    <span class="kw">if</span> <span class="nm">err</span> != <span class="kw">nil</span> {
+        <span class="kw">return</span> <span class="nm">0</span>, <span class="nm">err</span>
+    }
+
+    <span class="nm">resp</span>, <span class="nm">err</span> := <span class="pk">http</span>.<span class="nm">DefaultClient</span>.<span class="fn">Do</span>(<span class="nm">req</span>)
+    <span class="kw">if</span> <span class="nm">err</span> != <span class="kw">nil</span> {
+        <span class="cm">// если таймаут — err обернёт context.DeadlineExceeded</span>
+        <span class="kw">return</span> <span class="nm">0</span>, <span class="pk">fmt</span>.<span class="fn">Errorf</span>(<span class="st">"fetch user: %w"</span>, <span class="nm">err</span>)
+    }
+    <span class="kw">defer</span> <span class="nm">resp</span>.<span class="nm">Body</span>.<span class="fn">Close</span>()
+
+    <span class="kw">return</span> <span class="nm">resp</span>.<span class="nm">StatusCode</span>, <span class="kw">nil</span>
+}</pre></div>
+  <div class="pitfall">
+    <div class="pitfall-label">⚠ подводный камень</div>
+    Не устанавливай таймаут через <code class="code-inline">http.Client.Timeout</code> и <code class="code-inline">context.WithTimeout</code> одновременно без понимания — сработает тот, что наступит раньше. Для таймаута конкретного запроса используй контекст; <code class="code-inline">Client.Timeout</code> — глобальная защита всего клиента.
+  </div>
+
+  <!-- WithDeadline -->
+  <div class="section-title">context.WithDeadline</div>
+  <div class="explain">
+    <p>
+      <code class="code-inline">WithDeadline</code> принимает абсолютное время,
+      <code class="code-inline">WithTimeout</code> — относительное. Под капотом
+      <code class="code-inline">WithTimeout(ctx, d)</code> — это просто
+      <code class="code-inline">WithDeadline(ctx, time.Now().Add(d))</code>.
+    </p>
+    <p>
+      Используй <code class="code-inline">WithDeadline</code>, когда дедлайн задан снаружи —
+      например, как часть SLA всей операции. Можно «пробросить» дедлайн вниз, не добавляя нового.
+    </p>
+  </div>
+  <div class="code-block"><pre>
+<span class="kw">func</span> <span class="fn">processWithSLA</span>(<span class="nm">ctx</span> <span class="pk">context</span>.<span class="tp">Context</span>) <span class="tp">error</span> {
+    <span class="cm">// проверяем, есть ли дедлайн у родителя</span>
+    <span class="nm">parentDeadline</span>, <span class="nm">ok</span> := <span class="nm">ctx</span>.<span class="fn">Deadline</span>()
+    <span class="kw">if</span> !<span class="nm">ok</span> {
+        <span class="cm">// родитель без дедлайна — устанавливаем свой</span>
+        <span class="kw">var</span> <span class="nm">cancel</span> <span class="tp">context.CancelFunc</span>
+        <span class="nm">ctx</span>, <span class="nm">cancel</span> = <span class="pk">context</span>.<span class="fn">WithTimeout</span>(<span class="nm">ctx</span>, <span class="nm">5</span>*<span class="pk">time</span>.<span class="nm">Second</span>)
+        <span class="kw">defer</span> <span class="fn">cancel</span>()
+    } <span class="kw">else</span> {
+        <span class="cm">// дедлайн есть — берём тот, что раньше наступит</span>
+        <span class="nm">ourMax</span> := <span class="pk">time</span>.<span class="fn">Now</span>().<span class="fn">Add</span>(<span class="nm">5</span> * <span class="pk">time</span>.<span class="nm">Second</span>)
+        <span class="kw">if</span> <span class="nm">parentDeadline</span>.<span class="fn">After</span>(<span class="nm">ourMax</span>) {
+            <span class="kw">var</span> <span class="nm">cancel</span> <span class="tp">context.CancelFunc</span>
+            <span class="nm">ctx</span>, <span class="nm">cancel</span> = <span class="pk">context</span>.<span class="fn">WithDeadline</span>(<span class="nm">ctx</span>, <span class="nm">ourMax</span>)
+            <span class="kw">defer</span> <span class="fn">cancel</span>()
+        }
+        <span class="cm">// иначе родительский дедлайн строже — не трогаем</span>
+    }
+
+    <span class="kw">return</span> <span class="fn">doHeavyWork</span>(<span class="nm">ctx</span>)
+}</pre></div>
+  <div class="note">
+    <div class="note-label">совет</div>
+    <code class="code-inline">ctx.Deadline()</code> возвращает <code class="code-inline">(time.Time, bool)</code>. Всегда проверяй bool перед использованием — если дедлайна нет, время будет нулевым и сравнения будут некорректными.
+  </div>
+
+  <!-- WithValue -->
+  <div class="section-title">context.WithValue</div>
+  <div class="explain">
+    <p>
+      Прикрепляет к контексту произвольное значение.
+      Предназначен для <span class="hl">request-scoped данных</span>: trace ID, correlation ID,
+      authenticated user — данных, нужных всему стеку, но не меняющих логику функции.
+    </p>
+    <p>
+      <span class="err">Никогда не используй string или встроенные типы как ключи</span> —
+      разные пакеты случайно перезапишут значение друг друга.
+      Всегда объявляй собственный unexported тип ключа.
+    </p>
+  </div>
+  <div class="code-block"><pre>
+<span class="kw">package</span> <span class="pk">middleware</span>
+
+<span class="kw">import</span> (
+    <span class="st">"context"</span>
+    <span class="st">"net/http"</span>
+)
+
+<span class="cm">// unexported тип — защита от коллизий между пакетами</span>
+<span class="kw">type</span> <span class="tp">ctxKey</span> <span class="tp">string</span>
+
+<span class="kw">const</span> <span class="nm">requestIDKey</span> <span class="tp">ctxKey</span> = <span class="st">"requestID"</span>
+
+<span class="kw">func</span> <span class="fn">RequestID</span>(<span class="nm">next</span> <span class="tp">http.Handler</span>) <span class="tp">http.Handler</span> {
+    <span class="kw">return</span> <span class="pk">http</span>.<span class="fn">HandlerFunc</span>(<span class="kw">func</span>(<span class="nm">w</span> <span class="tp">http.ResponseWriter</span>, <span class="nm">r</span> *<span class="tp">http.Request</span>) {
+        <span class="nm">id</span> := <span class="nm">r</span>.<span class="nm">Header</span>.<span class="fn">Get</span>(<span class="st">"X-Request-ID"</span>)
+        <span class="nm">ctx</span> := <span class="pk">context</span>.<span class="fn">WithValue</span>(<span class="nm">r</span>.<span class="fn">Context</span>(), <span class="nm">requestIDKey</span>, <span class="nm">id</span>)
+        <span class="nm">next</span>.<span class="fn">ServeHTTP</span>(<span class="nm">w</span>, <span class="nm">r</span>.<span class="fn">WithContext</span>(<span class="nm">ctx</span>))
+    })
+}
+
+<span class="cm">// GetRequestID — типизированный accessor; не разбрасывай ctx.Value по коду</span>
+<span class="kw">func</span> <span class="fn">GetRequestID</span>(<span class="nm">ctx</span> <span class="pk">context</span>.<span class="tp">Context</span>) <span class="tp">string</span> {
+    <span class="nm">id</span>, _ := <span class="nm">ctx</span>.<span class="fn">Value</span>(<span class="nm">requestIDKey</span>).(<span class="tp">string</span>)
+    <span class="kw">return</span> <span class="nm">id</span>
+}</pre></div>
+  <div class="pitfall">
+    <div class="pitfall-label">⚠ подводный камень</div>
+    WithValue — не замена конфигурации и не кэш. Не храни в контексте зависимости (logger, db, repo) — это нарушает явность и ломает тестируемость. Контекст для данных конкретного запроса (кто, откуда, с каким trace), а не для того, что нужно функции для работы.
+  </div>
+
+  <!-- Propagation -->
+  <div class="section-title">propagation через горутины</div>
+  <div class="explain">
+    <p>
+      <code class="code-inline">context.Context</code> должен быть <span class="hl">первым параметром</span>
+      каждой функции, выполняющей I/O или способной занять продолжительное время. Это конвенция Go.
+    </p>
+    <p>
+      При запуске горутины — передавай тот же контекст в замыкание.
+      <span class="err">Создавать новый контекст внутри горутины</span> — антипаттерн: она выживет дольше,
+      чем должна, после отмены родителя.
+    </p>
+  </div>
+  <div class="code-block"><pre>
+<span class="kw">func</span> <span class="fn">processOrder</span>(<span class="nm">ctx</span> <span class="pk">context</span>.<span class="tp">Context</span>, <span class="nm">orderID</span> <span class="tp">int64</span>) <span class="tp">error</span> {
+    <span class="nm">order</span>, <span class="nm">err</span> := <span class="fn">fetchOrder</span>(<span class="nm">ctx</span>, <span class="nm">orderID</span>) <span class="cm">// ctx прокидываем везде</span>
+    <span class="kw">if</span> <span class="nm">err</span> != <span class="kw">nil</span> {
+        <span class="kw">return</span> <span class="nm">err</span>
+    }
+
+    <span class="nm">errCh</span> := <span class="fn">make</span>(<span class="kw">chan</span> <span class="tp">error</span>, <span class="nm">2</span>)
+
+    <span class="kw">go</span> <span class="kw">func</span>() {
+        <span class="cm">// ctx захвачен до старта горутины — корректно</span>
+        <span class="nm">errCh</span> &lt;- <span class="fn">updateInventory</span>(<span class="nm">ctx</span>, <span class="nm">order</span>)
+    }()
+
+    <span class="kw">go</span> <span class="kw">func</span>() {
+        <span class="nm">errCh</span> &lt;- <span class="fn">sendConfirmation</span>(<span class="nm">ctx</span>, <span class="nm">order</span>)
+    }()
+
+    <span class="kw">for</span> <span class="nm">i</span> := <span class="nm">0</span>; <span class="nm">i</span> &lt; <span class="nm">2</span>; <span class="nm">i</span>++ {
+        <span class="kw">if</span> <span class="nm">err</span> := &lt;-<span class="nm">errCh</span>; <span class="nm">err</span> != <span class="kw">nil</span> {
+            <span class="kw">return</span> <span class="nm">err</span>
+        }
+    }
+    <span class="kw">return</span> <span class="kw">nil</span>
+}</pre></div>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">правило 1</span>
+      <div class="step-text">
+        Не храни контекст в полях структуры — передавай явно в каждый метод.
+        <span class="dim">— Исключение: контекст, чей срок жизни совпадает со сроком жизни объекта.</span>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">правило 2</span>
+      <div class="step-text">
+        Никогда не передавай <code class="code-inline">nil</code> в качестве контекста. Если не знаешь что передать — <code class="code-inline">context.TODO()</code>.
+        <span class="dim">— nil вызовет панику в первом же ctx.Done() или ctx.Err().</span>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">правило 3</span>
+      <div class="step-text">
+        Получил контекст снаружи — не создавай новый таймаут поверх него без проверки. Иначе можешь сделать дедлайн мягче, чем у вызывающего.
+        <span class="dim">— Используй ctx.Deadline() чтобы выбрать меньшее из двух значений.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHEATSHEET -->
+  <div class="section-title">cheatsheet — что выбрать</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ситуация</th>
+          <th>API</th>
+          <th>примечание</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Начало цепочки (main, тест, обработчик)</td>
+          <td class="api">context.Background()</td>
+          <td class="when">всегда корень дерева контекстов</td>
+        </tr>
+        <tr>
+          <td>Место будет заменено при рефакторинге</td>
+          <td class="api">context.TODO()</td>
+          <td class="when">grep-маркер незавершённых мест</td>
+        </tr>
+        <tr>
+          <td>Нужно отменить операцию вручную</td>
+          <td class="api">context.WithCancel()</td>
+          <td class="when">всегда defer cancel()</td>
+        </tr>
+        <tr>
+          <td>Операция должна завершиться за N секунд</td>
+          <td class="api">context.WithTimeout()</td>
+          <td class="when">удобнее WithDeadline для относительного времени</td>
+        </tr>
+        <tr>
+          <td>Операция должна завершиться к конкретному моменту</td>
+          <td class="api">context.WithDeadline()</td>
+          <td class="when">абсолютное время; удобно для SLA всей операции</td>
+        </tr>
+        <tr>
+          <td>Передать request-scoped данные (trace ID, userID)</td>
+          <td class="api">context.WithValue()</td>
+          <td class="when">ключ — unexported тип; accessor — отдельная функция</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-brand"><span>ghost</span>_dev</div>
+  <div class="footer-note">// backend engineering &amp; distributed systems</div>
+</footer>
+
+</body>
+</html>
