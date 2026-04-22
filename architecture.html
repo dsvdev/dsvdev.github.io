@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Архитектура приложений — ghost_dev</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #161a23;
+    --border: #1e2230;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #69ff74;
+    --accent4: #bf8aff;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+  .nav-logo span { color: var(--muted); }
+  .nav-sep { color: var(--border); font-size: 1.2rem; }
+  .nav-back {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--accent); }
+
+  /* ── HERO ── */
+  .hero {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 60px 40px 40px;
+  }
+  .hero-tag {
+    font-size: 0.65rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+  }
+  .hero h1 .hl { color: var(--accent); }
+  .hero p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 580px;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 40px 60px;
+  }
+  .section-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── CONCEPT HEADER ── */
+  .concept-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .concept-subtitle {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 620px;
+  }
+
+  /* ── LAYERED DIAGRAM ── */
+  .layered-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .layer {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+  }
+  .layer:last-child { border-bottom: none; }
+  .layer:hover { background: var(--surface2); transform: translateX(4px); }
+  .layer.active { background: var(--surface2); }
+
+  .layer-num {
+    font-size: 0.6rem;
+    color: var(--muted);
+    width: 20px;
+    flex-shrink: 0;
+  }
+  .layer-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex: 1;
+  }
+  .layer-badge {
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid;
+    letter-spacing: 0.05em;
+  }
+  .layer-arrow {
+    font-size: 0.75rem;
+    color: var(--muted);
+    position: absolute;
+    bottom: -13px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    background: var(--bg);
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  .layer-1 .layer-name { color: var(--accent); }
+  .layer-1 .layer-badge { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.06); }
+  .layer-2 .layer-name { color: var(--accent3); }
+  .layer-2 .layer-badge { border-color: var(--accent3); color: var(--accent3); background: rgba(105,255,116,0.06); }
+  .layer-3 .layer-name { color: var(--accent4); }
+  .layer-3 .layer-badge { border-color: var(--accent4); color: var(--accent4); background: rgba(191,138,255,0.06); }
+  .layer-4 .layer-name { color: var(--accent2); }
+  .layer-4 .layer-badge { border-color: var(--accent2); color: var(--accent2); background: rgba(255,77,109,0.06); }
+
+  .layer-detail {
+    font-size: 0.7rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 6px;
+    display: none;
+  }
+  .layer.active .layer-detail { display: block; }
+
+  .layer-inner {
+    flex: 1;
+  }
+
+  /* ── ARROW INDICATOR ── */
+  .dep-arrow {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--muted);
+    padding: 8px 0;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── PROBLEMS ── */
+  .problems {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .problem-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .problem-card-title {
+    font-size: 0.72rem;
+    color: var(--accent2);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .problem-card-text {
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── CODE ── */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .code-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .code-dots { display: flex; gap: 5px; }
+  .code-dots span {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .code-dots span:nth-child(1) { background: #ff5f57; }
+  .code-dots span:nth-child(2) { background: #febc2e; }
+  .code-dots span:nth-child(3) { background: #28c840; }
+  .code-filename {
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+  .code-block pre {
+    padding: 20px;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    color: var(--text);
+  }
+  .kw { color: var(--accent4); }
+  .fn { color: var(--accent); }
+  .ty { color: var(--accent3); }
+  .cm { color: var(--muted); font-style: italic; }
+  .st { color: #f9a875; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0 0 48px;
+  }
+
+  /* ── HEX DIAGRAM ── */
+  .hex-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 32px;
+  }
+
+  .hex-diagram {
+    width: 100%;
+    max-width: 560px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .hex-adapter {
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .hex-adapter:hover { opacity: 0.85; }
+  .hex-adapter rect, .hex-adapter polygon {
+    transition: filter 0.2s;
+  }
+  .hex-adapter:hover rect,
+  .hex-adapter:hover polygon {
+    filter: brightness(1.3);
+  }
+
+  /* ── PRINCIPLES ── */
+  .principles {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .principle-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+  }
+  .principle-icon {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+  .principle-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .principle-text {
+    font-size: 0.65rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .compare-cell {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    font-size: 0.7rem;
+    line-height: 1.5;
+  }
+  .compare-cell:nth-child(3n) { border-right: none; }
+  .compare-cell.header {
+    background: var(--surface2);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .compare-cell.header.layered { color: var(--accent3); }
+  .compare-cell.header.hex { color: var(--accent4); }
+  .compare-cell.last-row { border-bottom: none; }
+  .compare-cell .yes { color: var(--accent3); }
+  .compare-cell .no { color: var(--accent2); }
+  .compare-cell .mid { color: #febc2e; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    width: fit-content;
+  }
+  .tab {
+    padding: 8px 18px;
+    font-size: 0.68rem;
+    color: var(--muted);
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+    transition: background 0.2s, color 0.2s;
+  }
+  .tab:last-child { border-right: none; }
+  .tab:hover { background: var(--surface); color: var(--text); }
+  .tab.active { background: var(--surface2); color: var(--accent); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .footer-brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .footer-brand span { color: var(--accent); }
+  .footer-note {
+    font-size: 0.65rem;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+
+  @media (max-width: 600px) {
+    nav, .hero, .section, footer { padding-left: 20px; padding-right: 20px; }
+    .problems { grid-template-columns: 1fr; }
+    .principles { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .compare-cell { border-right: none; }
+    .compare-cell:nth-child(3n) { border-right: none; }
+    .compare-cell.header { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">ghost<span>_</span>dev</a>
+  <span class="nav-sep">/</span>
+  <a href="index.html" class="nav-back">← назад</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">// architecture patterns</div>
+  <h1>Архитектура<br><span class="hl">приложений</span></h1>
+  <p>Слоистая и гексагональная архитектуры. Как структурировать код, чтобы он не превратился в монолитное болото через полгода.</p>
+</div>
+
+<!-- ═══════════════════ LAYERED ═══════════════════ -->
+<div class="section">
+  <div class="section-label">01 — слоистая архитектура</div>
+
+  <div class="concept-title">Layered Architecture</div>
+  <div class="concept-subtitle">
+    Код разбивается на горизонтальные слои. Каждый слой зависит только от слоя ниже.
+    Зависимости текут строго в одну сторону: сверху вниз.
+  </div>
+
+  <div class="layered-diagram">
+    <div class="layer layer-1" onclick="toggleLayer(this)">
+      <div class="layer-num">01</div>
+      <div class="layer-inner">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="layer-name">Presentation</div>
+          <div class="layer-badge">HTTP / gRPC / CLI</div>
+        </div>
+        <div class="layer-detail">
+          Принимает запросы снаружи. Валидирует входные данные, сериализует ответы.
+          Не содержит бизнес-логики. Знает только о слое ниже — Service.
+        </div>
+      </div>
+    </div>
+    <div class="dep-arrow">↓ зависит от</div>
+
+    <div class="layer layer-2" onclick="toggleLayer(this)">
+      <div class="layer-num">02</div>
+      <div class="layer-inner">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="layer-name">Business Logic</div>
+          <div class="layer-badge">Service / Use Case</div>
+        </div>
+        <div class="layer-detail">
+          Сердце приложения. Оркестрирует операции, реализует правила домена.
+          Не знает про HTTP, БД или очереди — только про данные и логику.
+        </div>
+      </div>
+    </div>
+    <div class="dep-arrow">↓ зависит от</div>
+
+    <div class="layer layer-3" onclick="toggleLayer(this)">
+      <div class="layer-num">03</div>
+      <div class="layer-inner">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="layer-name">Data Access</div>
+          <div class="layer-badge">Repository / DAO</div>
+        </div>
+        <div class="layer-detail">
+          Абстракция над хранилищем. Реализует CRUD-операции.
+          Business Logic не знает как именно данные хранятся — SQL, Redis, файл.
+        </div>
+      </div>
+    </div>
+    <div class="dep-arrow">↓ зависит от</div>
+
+    <div class="layer layer-4" onclick="toggleLayer(this)">
+      <div class="layer-num">04</div>
+      <div class="layer-inner">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="layer-name">Infrastructure</div>
+          <div class="layer-badge">PostgreSQL / Redis / S3</div>
+        </div>
+        <div class="layer-detail">
+          Реальные технологии: база данных, брокер сообщений, файловое хранилище.
+          Ничего не знает об остальных слоях. Просто хранит и отдаёт данные.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label" style="margin-top:40px;">проблемы</div>
+
+  <div class="problems">
+    <div class="problem-card">
+      <div class="problem-card-title">Жёсткая связность</div>
+      <div class="problem-card-text">
+        Business Logic напрямую зависит от Data Access слоя. Чтобы поменять PostgreSQL на MongoDB — нужно переписывать бизнес-логику.
+      </div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-card-title">Сложность тестирования</div>
+      <div class="problem-card-text">
+        Unit-тесты для Service слоя требуют реальной (или фейковой) БД. Нет чистого способа подменить инфраструктуру без изменения кода.
+      </div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-card-title">Нарушение DIP</div>
+      <div class="problem-card-text">
+        Высокоуровневые модули зависят от низкоуровневых. Это нарушение Dependency Inversion Principle из SOLID.
+      </div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-card-title">Утечка абстракций</div>
+      <div class="problem-card-text">
+        SQL-модели часто проникают в бизнес-слой. Детали хранилища (транзакции, джойны) начинают влиять на логику.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">пример на go</div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this, 'layered-struct')">структура</div>
+    <div class="tab" onclick="switchTab(this, 'layered-code')">код</div>
+  </div>
+
+  <div id="layered-struct" class="tab-content active">
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <div class="code-filename">package structure</div>
+      </div>
+      <pre>
+<span class="cm">// Layered Architecture — структура пакетов</span>
+
+myapp/
+├── handler/          <span class="cm">// Presentation layer</span>
+│   ├── user.go       <span class="cm">// HTTP handlers</span>
+│   └── middleware.go
+├── service/          <span class="cm">// Business Logic layer</span>
+│   └── user.go       <span class="cm">// UseCase / Service</span>
+├── repository/       <span class="cm">// Data Access layer</span>
+│   └── user.go       <span class="cm">// SQL queries</span>
+└── model/            <span class="cm">// Shared structs</span>
+    └── user.go</pre>
+    </div>
+  </div>
+
+  <div id="layered-code" class="tab-content">
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <div class="code-filename">service/user.go</div>
+      </div>
+      <pre>
+<span class="kw">package</span> <span class="ty">service</span>
+
+<span class="cm">// ⚠ Проблема: Service напрямую зависит от</span>
+<span class="cm">// конкретного репозитория — жёсткая связность</span>
+
+<span class="kw">type</span> <span class="ty">UserService</span> <span class="kw">struct</span> {
+    repo *repository.<span class="ty">UserRepository</span> <span class="cm">// конкретный тип!</span>
+}
+
+<span class="kw">func</span> (<span class="fn">s</span> *<span class="ty">UserService</span>) <span class="fn">GetUser</span>(id <span class="ty">int64</span>) (*model.<span class="ty">User</span>, <span class="ty">error</span>) {
+    <span class="cm">// Бизнес-логика прибита к PostgreSQL</span>
+    <span class="kw">return</span> s.repo.<span class="fn">FindByID</span>(id)
+}
+
+<span class="cm">// Чтобы написать unit-тест — нужна реальная БД</span>
+<span class="cm">// или сложный мок на конкретную структуру</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ HEXAGONAL ═══════════════════ -->
+<div class="section">
+  <hr class="divider">
+  <div class="section-label">02 — гексагональная архитектура</div>
+
+  <div class="concept-title">Hexagonal Architecture</div>
+  <div class="concept-subtitle">
+    Ядро домена изолировано от внешнего мира. Всё внешнее (HTTP, БД, Kafka) подключается через порты и адаптеры.
+    Алистер Кокберн, 2005. Также известна как Ports &amp; Adapters.
+  </div>
+
+  <!-- SVG HEX DIAGRAM -->
+  <div class="hex-container">
+    <svg class="hex-diagram" viewBox="0 0 560 380" xmlns="http://www.w3.org/2000/svg">
+      <!-- Core hexagon -->
+      <polygon points="280,80 360,125 360,215 280,260 200,215 200,125"
+        fill="#161a23" stroke="#00e5ff" stroke-width="2"/>
+      <text x="280" y="155" text-anchor="middle" font-family="Syne,sans-serif" font-weight="700" font-size="13" fill="#00e5ff">Domain</text>
+      <text x="280" y="172" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#4a5568">Core Logic</text>
+      <text x="280" y="186" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#4a5568">Entities</text>
+      <text x="280" y="200" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#4a5568">Use Cases</text>
+
+      <!-- Ports ring (dashed) -->
+      <polygon points="280,40 390,100 390,260 280,320 170,260 170,100"
+        fill="none" stroke="#1e2230" stroke-width="1.5" stroke-dasharray="6,4"/>
+      <text x="280" y="28" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#4a5568" letter-spacing="2">PORTS</text>
+
+      <!-- Adapters: TOP — HTTP -->
+      <g class="hex-adapter" onclick="highlightAdapter('http')">
+        <rect x="230" y="4" width="100" height="30" rx="6"
+          fill="#111318" stroke="#00e5ff" stroke-width="1.5"/>
+        <text x="280" y="23" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#00e5ff">HTTP</text>
+      </g>
+
+      <!-- Adapter: BOTTOM — DB -->
+      <g class="hex-adapter" onclick="highlightAdapter('db')">
+        <rect x="230" y="346" width="100" height="30" rx="6"
+          fill="#111318" stroke="#ff4d6d" stroke-width="1.5"/>
+        <text x="280" y="365" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#ff4d6d">PostgreSQL</text>
+      </g>
+
+      <!-- Adapter: TOP-LEFT — gRPC -->
+      <g class="hex-adapter" onclick="highlightAdapter('grpc')">
+        <rect x="60" y="60" width="80" height="30" rx="6"
+          fill="#111318" stroke="#bf8aff" stroke-width="1.5"/>
+        <text x="100" y="79" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#bf8aff">gRPC</text>
+      </g>
+
+      <!-- Adapter: BOTTOM-LEFT — Kafka -->
+      <g class="hex-adapter" onclick="highlightAdapter('kafka')">
+        <rect x="60" y="286" width="80" height="30" rx="6"
+          fill="#111318" stroke="#febc2e" stroke-width="1.5"/>
+        <text x="100" y="305" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#febc2e">Kafka</text>
+      </g>
+
+      <!-- Adapter: TOP-RIGHT — CLI -->
+      <g class="hex-adapter" onclick="highlightAdapter('cli')">
+        <rect x="420" y="60" width="80" height="30" rx="6"
+          fill="#111318" stroke="#69ff74" stroke-width="1.5"/>
+        <text x="460" y="79" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#69ff74">CLI</text>
+      </g>
+
+      <!-- Adapter: BOTTOM-RIGHT — Redis -->
+      <g class="hex-adapter" onclick="highlightAdapter('redis')">
+        <rect x="420" y="286" width="80" height="30" rx="6"
+          fill="#111318" stroke="#ff4d6d" stroke-width="1.5"/>
+        <text x="460" y="305" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#ff4d6d">Redis</text>
+      </g>
+
+      <!-- Connector lines -->
+      <line x1="280" y1="34" x2="280" y2="80" stroke="#1e2230" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="280" y1="260" x2="280" y2="346" stroke="#1e2230" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="140" y1="75" x2="200" y2="125" stroke="#1e2230" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="140" y1="301" x2="200" y2="215" stroke="#1e2230" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="420" y1="75" x2="360" y2="125" stroke="#1e2230" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="420" y1="301" x2="360" y2="215" stroke="#1e2230" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+      <!-- Labels: Driving / Driven -->
+      <text x="100" y="50" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#4a5568" letter-spacing="1">DRIVING</text>
+      <text x="460" y="50" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="#4a5568" letter-spacing="1">DRIVEN</text>
+    </svg>
+  </div>
+
+  <div id="adapter-info" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;font-size:0.7rem;color:var(--muted);margin-bottom:32px;min-height:48px;transition:all 0.2s;">
+    ← Кликни на адаптер для описания
+  </div>
+
+  <div class="section-label">принципы</div>
+
+  <div class="principles">
+    <div class="principle-card">
+      <div class="principle-icon">🔌</div>
+      <div class="principle-title">Порты</div>
+      <div class="principle-text">Интерфейсы, которые определяет ядро. Описывают что нужно домену — без деталей реализации.</div>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">🔧</div>
+      <div class="principle-title">Адаптеры</div>
+      <div class="principle-text">Конкретные реализации. HTTP-хендлер, SQL-репозиторий, Kafka-консьюмер. Реализуют порты.</div>
+    </div>
+    <div class="principle-card">
+      <div class="principle-icon">🧪</div>
+      <div class="principle-title">Тестируемость</div>
+      <div class="principle-text">Ядро тестируется без БД и сети. Mock реализует порт — и готово. Никаких интеграционных зависимостей в unit-тестах.</div>
+    </div>
+  </div>
+
+  <div class="section-label">пример на go</div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this, 'hex-port')">port</div>
+    <div class="tab" onclick="switchTab(this, 'hex-adapter')">adapter</div>
+    <div class="tab" onclick="switchTab(this, 'hex-test')">test</div>
+  </div>
+
+  <div id="hex-port" class="tab-content active">
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <div class="code-filename">domain/port.go</div>
+      </div>
+      <pre>
+<span class="kw">package</span> <span class="ty">domain</span>
+
+<span class="cm">// Port — интерфейс, определённый ядром домена</span>
+<span class="cm">// Ядро не знает ни про SQL, ни про HTTP</span>
+
+<span class="kw">type</span> <span class="ty">User</span> <span class="kw">struct</span> {
+    ID    <span class="ty">int64</span>
+    Email <span class="ty">string</span>
+    Name  <span class="ty">string</span>
+}
+
+<span class="cm">// UserRepository — порт (входящий)</span>
+<span class="kw">type</span> <span class="ty">UserRepository</span> <span class="kw">interface</span> {
+    <span class="fn">FindByID</span>(id <span class="ty">int64</span>) (*<span class="ty">User</span>, <span class="ty">error</span>)
+    <span class="fn">Save</span>(user *<span class="ty">User</span>) <span class="ty">error</span>
+}
+
+<span class="cm">// UserService — ядро домена, зависит от порта</span>
+<span class="kw">type</span> <span class="ty">UserService</span> <span class="kw">struct</span> {
+    repo <span class="ty">UserRepository</span> <span class="cm">// интерфейс, не конкретный тип</span>
+}
+
+<span class="kw">func</span> (<span class="fn">s</span> *<span class="ty">UserService</span>) <span class="fn">GetUser</span>(id <span class="ty">int64</span>) (*<span class="ty">User</span>, <span class="ty">error</span>) {
+    user, err := s.repo.<span class="fn">FindByID</span>(id)
+    <span class="kw">if</span> err != <span class="ty">nil</span> {
+        <span class="kw">return</span> <span class="ty">nil</span>, fmt.<span class="fn">Errorf</span>(<span class="st">"user not found: %w"</span>, err)
+    }
+    <span class="kw">return</span> user, <span class="ty">nil</span>
+}</pre>
+    </div>
+  </div>
+
+  <div id="hex-adapter" class="tab-content">
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <div class="code-filename">adapter/postgres/user.go</div>
+      </div>
+      <pre>
+<span class="kw">package</span> <span class="ty">postgres</span>
+
+<span class="cm">// Адаптер: реализует порт domain.UserRepository</span>
+<span class="cm">// Знает про SQL. Ядро домена — не знает.</span>
+
+<span class="kw">type</span> <span class="ty">UserRepo</span> <span class="kw">struct</span> {
+    db *sql.<span class="ty">DB</span>
+}
+
+<span class="cm">// Проверка соответствия интерфейсу на этапе компиляции</span>
+<span class="kw">var</span> _ domain.<span class="ty">UserRepository</span> = (*<span class="ty">UserRepo</span>)(<span class="ty">nil</span>)
+
+<span class="kw">func</span> (<span class="fn">r</span> *<span class="ty">UserRepo</span>) <span class="fn">FindByID</span>(id <span class="ty">int64</span>) (*domain.<span class="ty">User</span>, <span class="ty">error</span>) {
+    <span class="kw">var</span> u domain.<span class="ty">User</span>
+    err := r.db.<span class="fn">QueryRow</span>(
+        <span class="st">"SELECT id, email, name FROM users WHERE id = $1"</span>, id,
+    ).<span class="fn">Scan</span>(&u.ID, &u.Email, &u.Name)
+    <span class="kw">if</span> err != <span class="ty">nil</span> {
+        <span class="kw">return</span> <span class="ty">nil</span>, err
+    }
+    <span class="kw">return</span> &u, <span class="ty">nil</span>
+}
+
+<span class="kw">func</span> (<span class="fn">r</span> *<span class="ty">UserRepo</span>) <span class="fn">Save</span>(u *domain.<span class="ty">User</span>) <span class="ty">error</span> {
+    _, err := r.db.<span class="fn">Exec</span>(
+        <span class="st">"INSERT INTO users (id, email, name) VALUES ($1, $2, $3)"</span>,
+        u.ID, u.Email, u.Name,
+    )
+    <span class="kw">return</span> err
+}</pre>
+    </div>
+  </div>
+
+  <div id="hex-test" class="tab-content">
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <div class="code-filename">domain/user_test.go</div>
+      </div>
+      <pre>
+<span class="kw">package</span> <span class="ty">domain_test</span>
+
+<span class="cm">// Тест без БД. Mock реализует порт — и всё.</span>
+
+<span class="kw">type</span> <span class="ty">mockUserRepo</span> <span class="kw">struct</span> {
+    users <span class="kw">map</span>[<span class="ty">int64</span>]*domain.<span class="ty">User</span>
+}
+
+<span class="kw">func</span> (<span class="fn">m</span> *<span class="ty">mockUserRepo</span>) <span class="fn">FindByID</span>(id <span class="ty">int64</span>) (*domain.<span class="ty">User</span>, <span class="ty">error</span>) {
+    u, ok := m.users[id]
+    <span class="kw">if</span> !ok {
+        <span class="kw">return</span> <span class="ty">nil</span>, errors.<span class="fn">New</span>(<span class="st">"not found"</span>)
+    }
+    <span class="kw">return</span> u, <span class="ty">nil</span>
+}
+
+<span class="kw">func</span> (<span class="fn">m</span> *<span class="ty">mockUserRepo</span>) <span class="fn">Save</span>(u *domain.<span class="ty">User</span>) <span class="ty">error</span> { <span class="kw">return</span> <span class="ty">nil</span> }
+
+<span class="kw">func</span> <span class="fn">TestGetUser</span>(t *testing.<span class="ty">T</span>) {
+    repo := &<span class="ty">mockUserRepo</span>{
+        users: <span class="kw">map</span>[<span class="ty">int64</span>]*domain.<span class="ty">User</span>{
+            <span class="st">1</span>: {ID: <span class="st">1</span>, Email: <span class="st">"ghost@dev.io"</span>, Name: <span class="st">"Ghost"</span>},
+        },
+    }
+    svc := domain.<span class="fn">NewUserService</span>(repo)
+
+    user, err := svc.<span class="fn">GetUser</span>(<span class="st">1</span>)
+    <span class="fn">assert</span>.<span class="fn">NoError</span>(t, err)
+    <span class="fn">assert</span>.<span class="fn">Equal</span>(t, <span class="st">"ghost@dev.io"</span>, user.Email)
+    <span class="cm">// Никакой БД. Никакого Docker. Чисто.</span>
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ COMPARISON ═══════════════════ -->
+<div class="section">
+  <hr class="divider">
+  <div class="section-label">03 — сравнение</div>
+
+  <div class="concept-subtitle">Когда что использовать.</div>
+
+  <div class="compare-grid">
+    <div class="compare-cell header">критерий</div>
+    <div class="compare-cell header layered">Layered</div>
+    <div class="compare-cell header hex">Hexagonal</div>
+
+    <div class="compare-cell">Сложность проекта</div>
+    <div class="compare-cell"><span class="yes">Простые / средние</span></div>
+    <div class="compare-cell"><span class="yes">Сложные, долгосрочные</span></div>
+
+    <div class="compare-cell">Unit-тестируемость</div>
+    <div class="compare-cell"><span class="no">Сложно без БД</span></div>
+    <div class="compare-cell"><span class="yes">Легко (моки)</span></div>
+
+    <div class="compare-cell">Замена инфраструктуры</div>
+    <div class="compare-cell"><span class="no">Болезненно</span></div>
+    <div class="compare-cell"><span class="yes">Новый адаптер</span></div>
+
+    <div class="compare-cell">Порог входа</div>
+    <div class="compare-cell"><span class="yes">Низкий</span></div>
+    <div class="compare-cell"><span class="mid">Средний</span></div>
+
+    <div class="compare-cell">Количество кода</div>
+    <div class="compare-cell"><span class="yes">Меньше</span></div>
+    <div class="compare-cell"><span class="mid">Больше (интерфейсы)</span></div>
+
+    <div class="compare-cell last-row">Подходит для</div>
+    <div class="compare-cell last-row"><span class="mid">CRUD, внутренние тулзы</span></div>
+    <div class="compare-cell last-row"><span class="yes">Доменно-сложные системы</span></div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-brand"><span>ghost</span>_dev</div>
+  <div class="footer-note">// backend engineering &amp; distributed systems</div>
+</footer>
+
+<script>
+  function toggleLayer(el) {
+    const wasActive = el.classList.contains('active');
+    document.querySelectorAll('.layer').forEach(l => l.classList.remove('active'));
+    if (!wasActive) el.classList.add('active');
+  }
+
+  function switchTab(tabEl, contentId) {
+    const tabsContainer = tabEl.parentElement;
+    tabsContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+
+    // Find sibling tab-contents
+    const nextSib = tabsContainer.nextElementSibling;
+    // collect all adjacent tab-contents
+    let el = nextSib;
+    while (el && el.classList.contains('tab-content')) {
+      el.classList.remove('active');
+      el = el.nextElementSibling;
+    }
+    document.getElementById(contentId).classList.add('active');
+  }
+
+  const adapterInfo = {
+    http: { color: '#00e5ff', text: '<strong style="color:#00e5ff">HTTP Adapter</strong> — Driving (первичный). Принимает запросы от пользователя. Парсит JSON, валидирует, вызывает Use Case через порт. Знает про HTTP, домен — нет.' },
+    grpc: { color: '#bf8aff', text: '<strong style="color:#bf8aff">gRPC Adapter</strong> — Driving (первичный). Альтернативный транспорт. Тот же Use Case, другой протокол. Домен не менялся.' },
+    cli:  { color: '#69ff74', text: '<strong style="color:#69ff74">CLI Adapter</strong> — Driving (первичный). Команды из терминала. Удобно для скриптов и cron-задач. Та же бизнес-логика — другой вход.' },
+    db:   { color: '#ff4d6d', text: '<strong style="color:#ff4d6d">PostgreSQL Adapter</strong> — Driven (вторичный). Реализует порт UserRepository. Домен определяет интерфейс — адаптер делает SQL. Можно заменить на MongoDB без изменения домена.' },
+    kafka:{ color: '#febc2e', text: '<strong style="color:#febc2e">Kafka Adapter</strong> — Driven (вторичный). Реализует порт EventPublisher. Публикует события из домена в брокер. Домен не знает про топики и партиции.' },
+    redis:{ color: '#ff4d6d', text: '<strong style="color:#ff4d6d">Redis Adapter</strong> — Driven (вторичный). Реализует порт CacheRepository. Кеширование прозрачно для домена — он работает с интерфейсом.' },
+  };
+
+  function highlightAdapter(name) {
+    const info = adapterInfo[name];
+    const box = document.getElementById('adapter-info');
+    box.style.borderColor = info.color;
+    box.style.color = '#e2e8f0';
+    box.innerHTML = info.text;
+  }
+</script>
+
+</body>
+</html>
