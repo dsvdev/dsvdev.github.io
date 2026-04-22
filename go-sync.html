@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Go Sync Primitives — ghost_dev</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2230;
+    --accent: #00e5ff;
+    --accent2: #ff4d6d;
+    --accent3: #69ff74;
+    --text: #e2e8f0;
+    --muted: #4a5568;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+
+  .nav-logo span { color: var(--muted); }
+
+  .nav-sep { color: var(--border); font-size: 1.2rem; }
+
+  .nav-current {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  .page-tag {
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--text);
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+
+  h1 .hl { color: var(--accent); }
+
+  .lead {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 48px;
+    max-width: 640px;
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── PRIMITIVE CARD ── */
+  .primitive-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .primitive-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .primitive-card:hover {
+    border-color: rgba(0,229,255,0.3);
+  }
+
+  .primitive-header {
+    padding: 20px 24px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .primitive-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .primitive-meta { flex: 1; }
+
+  .primitive-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent);
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+
+  .primitive-when {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .primitive-when strong {
+    color: var(--text);
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    margin: 16px 24px;
+    background: #0d0f14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .code-label {
+    padding: 7px 14px;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .code-label .lang-badge {
+    background: rgba(105,255,116,0.08);
+    border: 1px solid rgba(105,255,116,0.2);
+    color: var(--accent3);
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 0.55rem;
+  }
+
+  pre {
+    padding: 16px 18px;
+    font-size: 0.74rem;
+    line-height: 1.75;
+    overflow-x: auto;
+    color: var(--text);
+  }
+
+  /* ── Go syntax highlighting ── */
+  .kw  { color: #c792ea; }   /* keyword */
+  .fn  { color: #82aaff; }   /* function/method */
+  .tp  { color: #ffcb6b; }   /* type */
+  .st  { color: var(--accent3); } /* string */
+  .cm  { color: #546e7a; font-style: italic; } /* comment */
+  .nm  { color: #f78c6c; }   /* number */
+  .pk  { color: var(--accent); } /* package */
+
+  /* ── PITFALL BOX ── */
+  .pitfall {
+    margin: 0 24px 20px;
+    background: rgba(255,77,109,0.06);
+    border: 1px solid rgba(255,77,109,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.71rem;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+
+  .pitfall-label {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.62rem;
+    color: var(--accent2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .pitfall strong { color: var(--accent2); }
+
+  /* ── WHEN TO USE TABLE ── */
+  .use-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 40px;
+    font-size: 0.72rem;
+  }
+
+  .use-table th {
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .use-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(30,34,48,0.5);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+
+  .use-table tr:last-child td { border-bottom: none; }
+
+  .use-table .name-cell {
+    color: var(--accent);
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .use-table .use-cell { color: var(--text); }
+  .use-table .avoid-cell { color: var(--muted); }
+
+  .use-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  code {
+    background: rgba(0,229,255,0.07);
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .footer-brand span { color: var(--accent); }
+
+  .footer-note {
+    font-size: 0.65rem;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+
+  @media (max-width: 600px) {
+    nav, .content, footer { padding-left: 20px; padding-right: 20px; }
+    .primitive-header, .code-block, .pitfall { margin-left: 0; margin-right: 0; }
+    .code-block { border-radius: 0; border-left: none; border-right: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">ghost<span>_</span>dev</a>
+  <span class="nav-sep">/</span>
+  <span class="nav-current">Go Sync Primitives</span>
+</nav>
+
+<div class="content">
+  <div class="page-tag">// concurrent go</div>
+  <h1>Go <span class="hl">Sync Primitives</span></h1>
+  <p class="lead">
+    Конкуренция в Go — это сила. Sync-примитивы — это узда. Без узды лошадь убьёт тебя.
+    Разбираем каждый инструмент: когда брать, когда не трогать и где он укусит.
+  </p>
+
+  <!-- ───── MUTEX ───── -->
+  <div class="section-title">sync.Mutex</div>
+  <div class="primitive-grid">
+    <div class="primitive-card">
+      <div class="primitive-header">
+        <div class="primitive-icon">🔒</div>
+        <div class="primitive-meta">
+          <div class="primitive-name">sync.Mutex</div>
+          <div class="primitive-when">
+            <strong>Когда:</strong> общий ресурс, один писатель / один читатель, простая защита критической секции.
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-label">
+          <span>mutex_counter.go</span>
+          <span class="lang-badge">Go</span>
+        </div>
+        <pre><span class="kw">type</span> <span class="tp">Counter</span> <span class="kw">struct</span> {
+    mu    <span class="pk">sync</span>.<span class="tp">Mutex</span>
+    value <span class="tp">int64</span>
+}
+
+<span class="kw">func</span> (c *<span class="tp">Counter</span>) <span class="fn">Inc</span>() {
+    c.mu.<span class="fn">Lock</span>()
+    <span class="kw">defer</span> c.mu.<span class="fn">Unlock</span>()
+    c.value++
+}
+
+<span class="kw">func</span> (c *<span class="tp">Counter</span>) <span class="fn">Value</span>() <span class="tp">int64</span> {
+    c.mu.<span class="fn">Lock</span>()
+    <span class="kw">defer</span> c.mu.<span class="fn">Unlock</span>()
+    <span class="kw">return</span> c.value
+}</pre>
+      </div>
+      <div class="pitfall">
+        <div class="pitfall-label">⚠ Подводные камни</div>
+        Никогда не копируй <code>sync.Mutex</code> после первого использования — vet поймает, но не всегда.
+        Передавай структуру через указатель. <strong>Не блокируй повторно</strong> из той же горутины — дедлок гарантирован.
+        Держи мьютекс как можно короче; не делай под ним сетевых вызовов.
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── RWMUTEX ───── -->
+  <div class="section-title">sync.RWMutex</div>
+  <div class="primitive-grid">
+    <div class="primitive-card">
+      <div class="primitive-header">
+        <div class="primitive-icon">📖</div>
+        <div class="primitive-meta">
+          <div class="primitive-name">sync.RWMutex</div>
+          <div class="primitive-when">
+            <strong>Когда:</strong> много читателей, мало писателей. Read-heavy кэши, конфиги, справочники.
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-label">
+          <span>rwmutex_cache.go</span>
+          <span class="lang-badge">Go</span>
+        </div>
+        <pre><span class="kw">type</span> <span class="tp">Cache</span> <span class="kw">struct</span> {
+    mu   <span class="pk">sync</span>.<span class="tp">RWMutex</span>
+    data <span class="kw">map</span>[<span class="tp">string</span>]<span class="tp">string</span>
+}
+
+<span class="kw">func</span> (c *<span class="tp">Cache</span>) <span class="fn">Get</span>(key <span class="tp">string</span>) (<span class="tp">string</span>, <span class="tp">bool</span>) {
+    c.mu.<span class="fn">RLock</span>()           <span class="cm">// разделяемая блокировка — читатели не мешают друг другу</span>
+    <span class="kw">defer</span> c.mu.<span class="fn">RUnlock</span>()
+    v, ok := c.data[key]
+    <span class="kw">return</span> v, ok
+}
+
+<span class="kw">func</span> (c *<span class="tp">Cache</span>) <span class="fn">Set</span>(key, value <span class="tp">string</span>) {
+    c.mu.<span class="fn">Lock</span>()            <span class="cm">// эксклюзивная блокировка — все ждут</span>
+    <span class="kw">defer</span> c.mu.<span class="fn">Unlock</span>()
+    c.data[key] = value
+}</pre>
+      </div>
+      <div class="pitfall">
+        <div class="pitfall-label">⚠ Подводные камни</div>
+        <strong>RWMutex медленнее Mutex при высоком contention</strong> из-за накладных расходов на управление читателями.
+        Если записей столько же, сколько чтений — бери обычный Mutex.
+        Никогда не делай апгрейд RLock → Lock без <code>RUnlock</code> — это дедлок.
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── WAITGROUP ───── -->
+  <div class="section-title">sync.WaitGroup</div>
+  <div class="primitive-grid">
+    <div class="primitive-card">
+      <div class="primitive-header">
+        <div class="primitive-icon">⏳</div>
+        <div class="primitive-meta">
+          <div class="primitive-name">sync.WaitGroup</div>
+          <div class="primitive-when">
+            <strong>Когда:</strong> нужно дождаться завершения N горутин. Fan-out, параллельные запросы, worker pool.
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-label">
+          <span>waitgroup_fanout.go</span>
+          <span class="lang-badge">Go</span>
+        </div>
+        <pre><span class="kw">func</span> <span class="fn">fetchAll</span>(urls []<span class="tp">string</span>) []<span class="tp">string</span> {
+    <span class="kw">var</span> (
+        wg      <span class="pk">sync</span>.<span class="tp">WaitGroup</span>
+        mu      <span class="pk">sync</span>.<span class="tp">Mutex</span>
+        results []<span class="tp">string</span>
+    )
+
+    <span class="kw">for</span> _, url := <span class="kw">range</span> urls {
+        wg.<span class="fn">Add</span>(<span class="nm">1</span>)
+        <span class="kw">go func</span>(u <span class="tp">string</span>) {
+            <span class="kw">defer</span> wg.<span class="fn">Done</span>()
+            body := <span class="fn">fetch</span>(u) <span class="cm">// ваш http.Get</span>
+            mu.<span class="fn">Lock</span>()
+            results = <span class="fn">append</span>(results, body)
+            mu.<span class="fn">Unlock</span>()
+        }(url)
+    }
+
+    wg.<span class="fn">Wait</span>()
+    <span class="kw">return</span> results
+}</pre>
+      </div>
+      <div class="pitfall">
+        <div class="pitfall-label">⚠ Подводные камни</div>
+        <code>wg.Add(1)</code> вызывай <strong>до</strong> старта горутины, не внутри неё — гонка гарантирована.
+        <strong>Не передавай WaitGroup по значению</strong> — только указатель или закрытие через переменную.
+        Счётчик никогда не должен уходить в минус: <code>Done()</code> без <code>Add()</code> — паника.
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── ONCE ───── -->
+  <div class="section-title">sync.Once</div>
+  <div class="primitive-grid">
+    <div class="primitive-card">
+      <div class="primitive-header">
+        <div class="primitive-icon">1️⃣</div>
+        <div class="primitive-meta">
+          <div class="primitive-name">sync.Once</div>
+          <div class="primitive-when">
+            <strong>Когда:</strong> ленивая инициализация, синглтон, однократное выполнение дорогой операции.
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-label">
+          <span>once_singleton.go</span>
+          <span class="lang-badge">Go</span>
+        </div>
+        <pre><span class="kw">type</span> <span class="tp">DB</span> <span class="kw">struct</span> {
+    once <span class="pk">sync</span>.<span class="tp">Once</span>
+    conn *<span class="tp">sql.DB</span>
+}
+
+<span class="kw">func</span> (d *<span class="tp">DB</span>) <span class="fn">Conn</span>() *<span class="tp">sql.DB</span> {
+    d.once.<span class="fn">Do</span>(<span class="kw">func</span>() {
+        <span class="kw">var</span> err <span class="tp">error</span>
+        d.conn, err = sql.<span class="fn">Open</span>(<span class="st">"postgres"</span>, dsn)
+        <span class="kw">if</span> err != <span class="kw">nil</span> {
+            <span class="fn">panic</span>(err) <span class="cm">// Once не повторится даже при ошибке</span>
+        }
+    })
+    <span class="kw">return</span> d.conn
+}
+
+<span class="cm">// Все вызовы после первого — мгновенны, без блокировки</span></pre>
+      </div>
+      <div class="pitfall">
+        <div class="pitfall-label">⚠ Подводные камни</div>
+        <strong>Once не повторяется даже если функция вернула ошибку или запаниковала</strong> (с Go 1.14 паника всё же пробрасывается).
+        Если инициализация провалилась — <code>Do</code> больше не вызовется. Обрабатывай ошибки через <code>sync.OnceValue</code> (Go 1.21+) или храни err отдельно.
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── COND ───── -->
+  <div class="section-title">sync.Cond</div>
+  <div class="primitive-grid">
+    <div class="primitive-card">
+      <div class="primitive-header">
+        <div class="primitive-icon">📡</div>
+        <div class="primitive-meta">
+          <div class="primitive-name">sync.Cond</div>
+          <div class="primitive-when">
+            <strong>Когда:</strong> горутина должна ждать выполнения условия, а не просто сигнала. Очереди, producer-consumer, буфер с дроп-логикой.
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-label">
+          <span>cond_queue.go</span>
+          <span class="lang-badge">Go</span>
+        </div>
+        <pre><span class="kw">type</span> <span class="tp">Queue</span> <span class="kw">struct</span> {
+    mu    <span class="pk">sync</span>.<span class="tp">Mutex</span>
+    cond  *<span class="pk">sync</span>.<span class="tp">Cond</span>
+    items []<span class="tp">int</span>
+}
+
+<span class="kw">func</span> <span class="fn">NewQueue</span>() *<span class="tp">Queue</span> {
+    q := &<span class="tp">Queue</span>{}
+    q.cond = <span class="pk">sync</span>.<span class="fn">NewCond</span>(&q.mu)
+    <span class="kw">return</span> q
+}
+
+<span class="kw">func</span> (q *<span class="tp">Queue</span>) <span class="fn">Put</span>(v <span class="tp">int</span>) {
+    q.mu.<span class="fn">Lock</span>()
+    q.items = <span class="fn">append</span>(q.items, v)
+    q.cond.<span class="fn">Signal</span>() <span class="cm">// будим одного ожидающего</span>
+    q.mu.<span class="fn">Unlock</span>()
+}
+
+<span class="kw">func</span> (q *<span class="tp">Queue</span>) <span class="fn">Get</span>() <span class="tp">int</span> {
+    q.mu.<span class="fn">Lock</span>()
+    <span class="kw">defer</span> q.mu.<span class="fn">Unlock</span>()
+    <span class="kw">for</span> <span class="fn">len</span>(q.items) == <span class="nm">0</span> {
+        q.cond.<span class="fn">Wait</span>() <span class="cm">// атомарно снимает мьютекс и засыпает</span>
+    }
+    v := q.items[<span class="nm">0</span>]
+    q.items = q.items[<span class="nm">1</span>:]
+    <span class="kw">return</span> v
+}</pre>
+      </div>
+      <div class="pitfall">
+        <div class="pitfall-label">⚠ Подводные камни</div>
+        <code>Wait()</code> всегда вызывай в <code>for</code>-цикле — spurious wakeups реальны.
+        <strong>Нельзя использовать Cond со значением мьютекса</strong> — только указатель.
+        В большинстве случаев channel проще и читабельнее. Cond нужен, когда одним каналом не обойтись или нужен Broadcast.
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── ATOMIC ───── -->
+  <div class="section-title">sync/atomic</div>
+  <div class="primitive-grid">
+    <div class="primitive-card">
+      <div class="primitive-header">
+        <div class="primitive-icon">⚡</div>
+        <div class="primitive-meta">
+          <div class="primitive-name">sync/atomic</div>
+          <div class="primitive-when">
+            <strong>Когда:</strong> простые счётчики, флаги, hot path где мьютекс слишком дорог. Lock-free структуры.
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-label">
+          <span>atomic_counter.go</span>
+          <span class="lang-badge">Go</span>
+        </div>
+        <pre><span class="kw">import</span> <span class="st">"sync/atomic"</span>
+
+<span class="cm">// Go 1.19+: типизированные атомики</span>
+<span class="kw">var</span> requests <span class="pk">atomic</span>.<span class="tp">Int64</span>
+
+<span class="kw">func</span> <span class="fn">handler</span>(w <span class="tp">http.ResponseWriter</span>, r *<span class="tp">http.Request</span>) {
+    requests.<span class="fn">Add</span>(<span class="nm">1</span>)
+    <span class="cm">// ...</span>
+}
+
+<span class="kw">func</span> <span class="fn">stats</span>() <span class="tp">int64</span> {
+    <span class="kw">return</span> requests.<span class="fn">Load</span>()
+}
+
+<span class="cm">// CAS — compare-and-swap: меняет только если значение совпало</span>
+<span class="kw">var</span> flag <span class="pk">atomic</span>.<span class="tp">Bool</span>
+
+<span class="kw">func</span> <span class="fn">tryAcquire</span>() <span class="tp">bool</span> {
+    <span class="kw">return</span> flag.<span class="fn">CompareAndSwap</span>(<span class="kw">false</span>, <span class="kw">true</span>)
+}</pre>
+      </div>
+      <div class="pitfall">
+        <div class="pitfall-label">⚠ Подводные камни</div>
+        Атомики работают только для <strong>одиночных операций</strong>. Если нужно обновить два поля одновременно — только Mutex.
+        <code>atomic.Value</code> требует, чтобы тип хранимого значения не менялся — паника при несовпадении типов.
+        <strong>Не решай атомиком задачи мьютекса</strong>: "горящие флаги" вместо нормальной синхронизации — путь к race condition.
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── CHANNELS ───── -->
+  <div class="section-title">channels как sync-примитив</div>
+  <div class="primitive-grid">
+    <div class="primitive-card">
+      <div class="primitive-header">
+        <div class="primitive-icon">🔗</div>
+        <div class="primitive-meta">
+          <div class="primitive-name">channel</div>
+          <div class="primitive-when">
+            <strong>Когда:</strong> передача владения данными, оркестрация горутин, сигналы завершения, pipeline, таймауты.
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-label">
+          <span>channel_patterns.go</span>
+          <span class="lang-badge">Go</span>
+        </div>
+        <pre><span class="cm">// ── Сигнал завершения (done channel) ──</span>
+<span class="kw">func</span> <span class="fn">worker</span>(done <-<span class="kw">chan</span> <span class="kw">struct</span>{}) {
+    <span class="kw">for</span> {
+        <span class="kw">select</span> {
+        <span class="kw">case</span> <-done:
+            <span class="kw">return</span> <span class="cm">// получили сигнал — выходим</span>
+        <span class="kw">default</span>:
+            <span class="fn">doWork</span>()
+        }
+    }
+}
+
+done := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw">struct</span>{})
+<span class="kw">go</span> <span class="fn">worker</span>(done)
+<span class="fn">close</span>(done) <span class="cm">// будит всех читателей сразу</span>
+
+<span class="cm">// ── Семафор через буферизованный канал ──</span>
+sem := <span class="fn">make</span>(<span class="kw">chan</span> <span class="kw">struct</span>{}, <span class="nm">5</span>) <span class="cm">// не более 5 горутин</span>
+
+<span class="kw">for</span> _, task := <span class="kw">range</span> tasks {
+    sem <- <span class="kw">struct</span>{}{}
+    <span class="kw">go func</span>(t <span class="tp">Task</span>) {
+        <span class="kw">defer func</span>() { <-sem }()
+        <span class="fn">process</span>(t)
+    }(task)
+}</pre>
+      </div>
+      <div class="pitfall">
+        <div class="pitfall-label">⚠ Подводные камни</div>
+        Запись в закрытый канал — <strong>паника</strong>. Читай из закрытого — всегда получишь нулевое значение.
+        Небуферизованный канал блокирует оба конца до встречи — легко получить дедлок.
+        <strong>Не передавай канал туда и обратно</strong> — определи единственного владельца и закрывай только его стороной.
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── CHEATSHEET ───── -->
+  <div class="section-title">что выбрать</div>
+  <table class="use-table">
+    <thead>
+      <tr>
+        <th>Примитив</th>
+        <th>Используй когда</th>
+        <th>Не используй когда</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="name-cell"><code>Mutex</code></td>
+        <td class="use-cell">Нужна простая защита разделяемого состояния</td>
+        <td class="avoid-cell">Много читателей → RWMutex; счётчики → atomic</td>
+      </tr>
+      <tr>
+        <td class="name-cell"><code>RWMutex</code></td>
+        <td class="use-cell">Read &gt;&gt; Write, read-heavy кэши</td>
+        <td class="avoid-cell">Запись столь же часта, как чтение</td>
+      </tr>
+      <tr>
+        <td class="name-cell"><code>WaitGroup</code></td>
+        <td class="use-cell">Ждать N горутин, fan-out</td>
+        <td class="avoid-cell">Нужно получить результат — лучше канал</td>
+      </tr>
+      <tr>
+        <td class="name-cell"><code>Once</code></td>
+        <td class="use-cell">Ленивая инициализация, синглтон</td>
+        <td class="avoid-cell">Нужно повторить при ошибке</td>
+      </tr>
+      <tr>
+        <td class="name-cell"><code>Cond</code></td>
+        <td class="use-cell">Ожидание условия, Broadcast нескольким</td>
+        <td class="avoid-cell">Большинство случаев — канал читабельнее</td>
+      </tr>
+      <tr>
+        <td class="name-cell"><code>atomic</code></td>
+        <td class="use-cell">Счётчики, флаги, hot path</td>
+        <td class="avoid-cell">Составные операции над несколькими полями</td>
+      </tr>
+      <tr>
+        <td class="name-cell"><code>channel</code></td>
+        <td class="use-cell">Передача данных/сигналов между горутинами</td>
+        <td class="avoid-cell">Разделяемое состояние — используй Mutex</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+<footer>
+  <div class="footer-brand"><span>ghost</span>_dev</div>
+  <div class="footer-note">// backend engineering &amp; distributed systems</div>
+</footer>
+
+</body>
+</html>
